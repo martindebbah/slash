@@ -6,7 +6,7 @@ EXEC = slash
 
 all: $(EXEC)
 
-slash: src/slash.c
+slash: src/slash.c src/commande.c
 	$(CC) $(CFLAGS) $^ -o $@
 
 clean:

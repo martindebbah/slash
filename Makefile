@@ -7,7 +7,7 @@ EXEC = slash
 all: $(EXEC)
 
 slash: src/slash.c src/commande.c
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $^ $(CFLAGS) -o $@
 
 clean:
 	rm -rf $(EXEC)

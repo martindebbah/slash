@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <readline/readline.h>
@@ -22,6 +23,7 @@ int main(int argc, char **argv) {
 
         // Découpage de la ligne de commande
         commande *cmd = create_cmd(line);
+        free(line);
         if (!cmd)
             continue;
 
@@ -40,5 +42,5 @@ int main(int argc, char **argv) {
 }
 
 char *prompt(int val) {
-    return "prompt $";
+    return "prompt$ ";
 }

@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include "commande.h"
 
-#define MAX_ARGS_NUMBER 4096
-#define MAX_ARGS_STRLEN 4096
-
 commande *create_cmd(char *line) {
     commande *cmd = malloc(sizeof(commande));
     const char *sep = " ";

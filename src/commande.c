@@ -11,12 +11,15 @@ commande *create_cmd(char *line) {
         goto error;
 
     char *str = strtok(line, sep);
+    if (!str)
+        goto error;
 
-    cmd -> name = malloc(strlen(str));
+    cmd -> name = malloc(strlen(str) + 1);
     memcpy(cmd -> name, str, strlen(str));
     if (!cmd -> name)
         goto error;
-
+    cmd -> name[strlen(str)] = '\0';
+    
     cmd -> param = create_param();
 
     return cmd;
@@ -57,6 +60,7 @@ void delete_cmd(commande *cmd) {
         free(cmd -> name);
     if (cmd -> param != NULL)
         delete_param(cmd -> param);
+    free(cmd);
 }
 
 void delete_param(parametres *p) {

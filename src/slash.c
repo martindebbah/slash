@@ -15,17 +15,23 @@
 int main(int argc, char **argv) {
 
     rl_outstream = stderr;
+    int retVal = 0;
     
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
-        char *line = readline(prompt(0)); // A remplacer par le prompt
-        add_history(line);
+        char *line = readline(prompt(retVal));
 
         // Découpage de la ligne de commande
         commande *cmd = create_cmd(line);
-        free(line);
-        if (!cmd)
+        if (!cmd) {
+            free(line);
+            retVal = 127;
             continue;
+        }
+
+        // Ajout de la ligne à l'historique
+        add_history(line);
+        free(line);
 
         // Interprétation de la ligne de commande
 
@@ -33,14 +39,18 @@ int main(int argc, char **argv) {
         // Si exit -> break
         if (strcmp(cmd -> name, "exit") == 0) {
             delete_cmd(cmd);
-            exit(0);
+            // Stocker la valeur de sortie
+            break;
         }
-        //delete_cmd(cmd);
+        delete_cmd(cmd);
     }
 
+    printf("%d\n", history_length);
+    clear_history();
+    printf("%d\n", history_length);
     return 0;
 }
 
 char *prompt(int val) {
-    return "prompt$ ";
+    return "bash$ ";
 }

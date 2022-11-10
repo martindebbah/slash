@@ -1,5 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -g -pedantic -I./readline-8.2/prefix/include -I./include -L./readline-8.2/prefix/lib
+CFLAGS = -Wall -g -pedantic
+INCLUDES =-I./include #-I./readline-8.2/prefix/readline/include 
+LIB = -L./readline-8.2/prefix/lib
+CCLINK = -lreadline
 EXEC = slash
 
 .PHONY: clean
@@ -7,7 +10,7 @@ EXEC = slash
 all: $(EXEC)
 
 slash: src/slash.c src/commande.c
-	$(CC) $(CFLAGS) $^ -o $@ -lreadline
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ $(CCLINK)
 
 clean:
 	rm -rf $(EXEC)

@@ -9,8 +9,10 @@
 #include <sys/dir.h>
 #include <limits.h>
 #include <errno.h>
+
 #include "cmd.h"
 #include "mystring.h"
+#include "commande.h"
 
 /*
     Renvoie si le repertoire dir est la racine
@@ -82,4 +84,69 @@ char * cmd_pwd(){
     printf("%s ",path->data);
 
     return path->data;
+}
+
+int cmd_cd(parametres *p) {
+    //TODO 1 : si parametre->str est null ou "~" alors se déplacer à la racine du depot et return 0
+    //TODO 2 : sinon
+        // a) si parametre->str == '-' alors se déplacer dans le répertoire précédent et return 0
+        // b) si parametre->str == ref alors on se déplace dans ref en ignorant les liens symboliques avec return 0 et return 1 avec message d'erreur sinon
+        // c) si parametre->str == "-P ref" alors on se déplace dans ref en ignorant les liens symboliques avec return 0 ou si juste "-P" alors TODO 1 et return 1 sinon
+        // d) si parametre->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
+
+    //TODO 1 
+    
+    /*if (p->str == NULL || strcmp(p->str, "~")==0) {
+            chdir("..");
+            return 0;
+        }
+    */
+    //TODO 2 a)
+    
+    if (strcmp(p->str, "-")==0) {
+        chdir("..");
+        return 0;
+    }
+    
+    /*
+    //TODO 2 b)
+    else if (strcmp(p->str, NULL)!=0 && strcmp(p->str, "-")!=0 && strcmp(p->str, "-P")!=0 && strcmp(p->str, "-L")!=0) {
+        chdir(p->str);
+        return 0;
+    }
+    */
+    /*
+    //TODO 2 c)
+    else if (strcmp(p->str, "-P")==0) {
+        if (strcmp(p->suivant->str, NULL)==0) {
+            chdir("/");
+            return 0;
+        }
+        else {
+            chdir(p->suivant->str);
+            return 0;
+        }
+    }
+    */
+    /*
+    //TODO 2 d)
+    else if (strcmp(p->str, "-L")==0) {
+        if (strcmp(p->suivant->str, NULL)==0) {
+            chdir("/");
+            return 0;
+        }
+        else {
+            //gerer les liens symboliques
+            return 0;
+        }
+    }
+    */
+    
+    else {
+        perror("Le repertoire n'existe pas");
+        return 1;
+    }
+    
+    
+    
 }

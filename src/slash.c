@@ -36,9 +36,16 @@ int main(int argc, char **argv) {
         // Interprétation de la ligne de commande
 
         // Exécution des commandes (fork) et attente de la fin du processus fils
+        if (strcmp(cmd -> name, "pwd") == 0) {
+            //test
+            cmd_pwd();
+            break;
+        }
+
         // Si exit -> break
         if (strcmp(cmd -> name, "exit") == 0) {
             delete_cmd(cmd);
+            
             // Stocker la valeur de sortie
             break;
         }

@@ -65,5 +65,21 @@ char * cmd_pwd(){
 
     if(!dir || !parent) return NULL;
 
+    while(!is_root(dir)){
+        char* dirname = get_dirname(dir,parent);
+        printf("%s ",dirname);
+        if(dirname == NULL) return NULL;
+        string_append(path,dirname);
+        string_append(path,"/");
+        closedir(dir);
+        dir = parent;
+        parent_fd = openat(dirfd(dir),"..", O_RDONLY | O_DIRECTORY);
+        parent = fdopendir(parent_fd);
+    }
+    
+    closedir(parent);
+
+    printf("%s ",path->data);
+
     return path->data;
 }

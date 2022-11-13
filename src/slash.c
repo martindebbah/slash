@@ -38,8 +38,7 @@ int main(int argc, char **argv) {
         // Exécution des commandes (fork) et attente de la fin du processus fils
         if (strcmp(cmd -> name, "pwd") == 0) {
             //test
-            printf("%s ",cmd_pwd());
-            break;
+            printf("%s \n",cmd_pwd());
         }
 
         // Si exit -> break
@@ -48,6 +47,9 @@ int main(int argc, char **argv) {
             
             // Stocker la valeur de sortie
             break;
+        }
+        if (strcmp(cmd -> name, "cd") == 0) {
+            cmd_cd(cmd->param);
         }
         delete_cmd(cmd);
     }

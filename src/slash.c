@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
             break;
         }
         if (strcmp(cmd -> name, "cd") == 0) {
-            cmd_cd(cmd->param);
+            cmd_cd(cmd);
         }
         delete_cmd(cmd);
     }

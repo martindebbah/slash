@@ -88,7 +88,7 @@ char * cmd_pwd(){
     return path->data;
 }
 
-int cmd_cd(parametres *p) {
+int cmd_cd(commande *cmd) {
     //Squelette de la fonction cmd_cd
     //TODO 1 : si parametre->str est null ou "~" alors se déplacer à la racine du depot et return 0
     //TODO 2 : sinon
@@ -99,8 +99,10 @@ int cmd_cd(parametres *p) {
 
     //TODO 1 
     
-    if (p == NULL ) {
+    if (cmd->premier == NULL ) {
         chdir(getenv("HOME"));
         return 0;
     }
+
+    return 1;
 }

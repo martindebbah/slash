@@ -22,11 +22,17 @@ struct string * string_new(size_t capacity) {
   return str;
 }
 
+/*
+  Libère le pointeur SRC
+*/
 void string_delete(struct string * str) {
   free(str->data);
   free(str);
 }
 
+/*
+  Ajoute SRC à la fin de DEST
+*/
 int string_append (struct string * dest, char * src) {
   size_t src_len = strlen(src);
   if (dest->length + src_len + 1 > dest->capacity) return 0;
@@ -35,9 +41,23 @@ int string_append (struct string * dest, char * src) {
   return 1;
 }
 
+/*
+  Ajoute SRC au début de DEST
+*/
+int string_prepend(struct string * dest, char * src){
+  size_t src_len = strlen(src);
+  if(dest->length + src_len + 1 > dest->capacity) return 1;
+  memmove(dest->data+src_len, dest->data, dest->length+1);
+  memmove(dest->data, src, src_len);
+  dest->length += src_len;
+  return 0;
+}
+
+
 void string_truncate (struct string * str, size_t nchars) {
   if (nchars > str->length) { nchars = str->length; }
   str->data[str->length-nchars] = 0;
   str->length -= nchars;
 }
+
 

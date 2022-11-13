@@ -62,6 +62,11 @@ static char* get_dirname(DIR* dir, DIR* parent){
 char * cmd_pwd(){
     struct string* path = string_new(100);
     DIR* dir = opendir(".");
+    if(is_root(dir)){
+        string_prepend(path, "/");
+        closedir(dir);
+        return path->data;
+    }
     int parent_fd = openat(dirfd(dir),"..", O_RDONLY | O_DIRECTORY);
     DIR* parent = fdopendir(parent_fd);
 
@@ -69,10 +74,9 @@ char * cmd_pwd(){
 
     while(!is_root(dir)){
         char* dirname = get_dirname(dir,parent);
-        printf("%s ",dirname);
         if(dirname == NULL) return NULL;
-        string_append(path,dirname);
-        string_append(path,"/");
+        string_prepend(path,dirname);
+        string_prepend(path,"/");
         closedir(dir);
         dir = parent;
         parent_fd = openat(dirfd(dir),"..", O_RDONLY | O_DIRECTORY);
@@ -80,8 +84,6 @@ char * cmd_pwd(){
     }
     
     closedir(parent);
-
-    printf("%s ",path->data);
 
     return path->data;
 }

@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         // Exécution des commandes (fork) et attente de la fin du processus fils
         if (strcmp(cmd -> name, "pwd") == 0) {
             //test
-            cmd_pwd();
+            printf("%s ",cmd_pwd());
             break;
         }
 

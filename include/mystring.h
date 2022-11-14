@@ -25,5 +25,11 @@ int string_append (struct string * dest, char * src);
 void string_truncate (struct string * str, size_t nchars);
 // Tronque la chaîne en enlevant les nchars derniers caractères
 // (ou tous les caractères s'il y en a moins de nchars).
+
+// Ajoute SRC à la fin de DEST
+int string_append (struct string * dest, char * src);
+
+// Ajoute SRC au début de DEST
+int string_prepend(struct string * dest, char * src);
   
 #endif // MYSTRING_H

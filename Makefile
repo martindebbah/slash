@@ -9,7 +9,7 @@ EXEC = slash
 
 all: $(EXEC)
 
-slash: src/slash.c src/commande.c
+slash: src/slash.c src/commande.c src/cmd.c src/mystring.c
 	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ $(CCLINK)
 
 clean:

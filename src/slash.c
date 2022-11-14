@@ -45,12 +45,60 @@ int main(int argc, char **argv) {
         delete_cmd(cmd);
     }
 
-    printf("%d\n", history_length);
     clear_history();
-    printf("%d\n", history_length);
     return 0;
 }
 
 char *prompt(int val) {
-    return "bash$ ";
+    char *prompt = malloc(46); // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur)
+                            // + 1 pour le caractère null final
+    int i = 0;
+
+    // Valeur de retour
+    if (val == 0) { // Succès -> vert
+        i += changeColor(prompt, 'v'); // 5
+    }else { // Echec -> rouge
+        i += changeColor(prompt + i, 'r'); // 5
+    }
+    prompt[i++] = '[';
+    prompt[i++] = val + '0';
+    prompt[i++] = ']';
+
+    // Chemin du répertoire
+    i += changeColor(prompt+ i, 'c'); // 5
+    i += addToPrompt(prompt + i, "bash");
+
+    // Prompt
+    i += changeColor(prompt + i, 'b'); // 5
+    i += addToPrompt(prompt + i, "$ ");
+    prompt[i++] = '\0';
+    return prompt;
+}
+
+int changeColor(char *s, char color) {
+    char *c;
+    switch (color) {
+        case 'v': // Vert
+            c = "\033[32m";
+            memcpy(s, c, 5);
+            break;
+        case 'r': // Rouge
+            c = "\033[91m";
+            memcpy(s, c, 5);
+            break;
+        case 'c': // Cyan
+            c = "\033[36m";
+            memcpy(s, c, 5);
+            break;
+        case 'b': // Blanc
+            c = "\033[00m";
+            memcpy(s, c, 5);
+            break;
+    }
+    return 5;
+}
+
+int addToPrompt(char *p, char *s) {
+    memcpy(p, s, strlen(s));
+    return strlen(s);
 }

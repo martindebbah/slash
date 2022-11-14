@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
 }
 
 char *prompt(int val) {
-    char *prompt = malloc(46); // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur)
-                            // + 1 pour le caractère null final
+    int size = 46;  // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur)
+    char *prompt = malloc(size);    // + 1 pour le caractère null final
     int i = 0;
 
     // Valeur de retour
@@ -75,7 +75,9 @@ char *prompt(int val) {
 
     // Chemin du répertoire
     i += changeColor(prompt+ i, 'c'); // 5
-    i += addToPrompt(prompt + i, "bash");
+    int max = size - i - 8; // (5 (couleur) + 3 ("$ \0"))
+    char *path = cutPath(cmd_pwd(), max);
+    i += addToPrompt(prompt + i, path);
 
     // Prompt
     i += changeColor(prompt + i, 'b'); // 5
@@ -110,4 +112,22 @@ int changeColor(char *s, char color) {
 int addToPrompt(char *p, char *s) {
     memcpy(p, s, strlen(s));
     return strlen(s);
+}
+
+char *cutPath(char *path, int max) {
+    if (strlen(path) <= max)
+        return path;
+
+    int d = strlen(path);
+    int i = d;
+    while (strlen(path) - i < max) {
+        if (path[i] == '/') {
+            d = i;
+        }
+        i--;
+    }
+    path[--d] = '.';
+    path[--d] = '.';
+    path[--d] = '.';
+    return path + d;
 }

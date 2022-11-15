@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
             // Stocker la valeur de sortie
             if (cmd -> nbParam > 0)
                 exitVal = atoi(getParamAt(cmd, 0));
-                
+
             delete_cmd(cmd);
             break;
         }
@@ -148,16 +148,22 @@ char *cutPath(char *path, int max) {
     if (strlen(path) <= max)
         return path;
 
-    int d = strlen(path);
-    int i = d;
-    while (strlen(path) - i < max) {
-        if (path[i] == '/') {
-            d = i;
-        }
-        i--;
-    }
-    path[--d] = '.';
-    path[--d] = '.';
-    path[--d] = '.';
-    return path + d;
+    int i = strlen(path) - max;
+    path[i] = '.';
+    path[i  + 1] = '.';
+    path[i + 2] = '.';
+    return path + i;
+
+    // int d = strlen(path);
+    // int i = d;
+    // while (strlen(path) - i < max) {
+    //     if (path[i] == '/') {
+    //         d = i;
+    //     }
+    //     i--;
+    // }
+    // path[--d] = '.';
+    // path[--d] = '.';
+    // path[--d] = '.';
+    // return path + d;
 }

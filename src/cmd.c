@@ -90,19 +90,45 @@ char * cmd_pwd(){
 
 int cmd_cd(commande *cmd) {
     //Squelette de la fonction cmd_cd
-    //TODO 1 : si parametre->str est null ou "~" alors se déplacer à la racine du depot et return 0
+    //TODO 1 : si param est null alors se déplacer à la racine du depot et return 0
+    //TODO 1 bis : si param est "~" ou "-P" sans suivant alors on se déplace à la racine du depot et return 0
     //TODO 2 : sinon
-        // a) si parametre->str == '-' alors se déplacer dans le répertoire précédent et return 0
-        // b) si parametre->str == ref alors on se déplace dans ref en ignorant les liens symboliques avec return 0 et return 1 avec message d'erreur sinon
-        // c) si parametre->str == "-P ref" alors on se déplace dans ref en ignorant les liens symboliques avec return 0 ou si juste "-P" alors TODO 1 et return 1 sinon
-        // d) si parametre->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
+        // a) si param->str == '-' alors se déplacer dans le répertoire précédent et return 0
+            //garder en mémoire le rep précédent donc avant dernier pwd
+        // b) si param->str == ref alors on se déplace dans ref en ignorant les liens symboliques avec return 0 et return 1 avec message d'erreur sinon
+        // c) si param->str == "-P ref" alors on se déplace dans ref en ignorant les liens symboliques avec return 0 ou si juste "-P" alors TODO 1 et return 1 sinon
+        // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
 
     //TODO 1 
-    
-    if (!cmd -> param) {
+    if (cmd->param== NULL ) {
         chdir(getenv("HOME"));
         return 0;
     }
-
+    //TODO 1 bis
+    if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0) && cmd->param->suivant == NULL) {
+        chdir(getenv("HOME"));
+        return 0;
+    }
+    //TODO 2 a)
+    if (strcmp(cmd->param->str, "-") == 0 && cmd->param->suivant == NULL) {
+        //chdir(getenv("OLDPWD")); ca marche pas encore
+        return 0;
+    }
+    //TODO 2 b)
+    if (strcmp(cmd->param->str, "-L") != 0 && 
+        strcmp(cmd->param->str, "-P") != 0 &&
+        strcmp(cmd->param->str, "-") != 0 &&
+        strcmp(cmd->param->str, "~") != 0 && 
+        cmd->param->suivant == NULL) {
+            if (chdir(cmd->param->str) == 0) {
+                return 0;
+            }
+            else {
+                printf("bash: cd: %s: Aucun fichier ou dossier de ce type\n", cmd->param->str);
+                return 1;
+            }            
+        }
+    //TODO 2 c)
+    //TDOD 2 d)
     return 1;
 }

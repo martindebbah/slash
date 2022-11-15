@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
 
     rl_outstream = stderr;
     int retVal = 0;
+    int exitVal = 0;
     
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
@@ -44,12 +45,6 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        parametres *param = cmd -> param;
-        for (int i = 0; i < cmd -> nbParam; i++) {
-            printf("arg%d : %s\n", i, param -> str);
-            param = param -> suivant;
-        }
-
         // Ajout de la ligne à l'historique
         add_history(hist);
         free(hist);
@@ -64,9 +59,11 @@ int main(int argc, char **argv) {
 
         // Si exit -> break
         if (strcmp(cmd -> name, "exit") == 0) {
-            delete_cmd(cmd);
-            
             // Stocker la valeur de sortie
+            if (cmd -> nbParam > 0)
+                exitVal = atoi(getParamAt(cmd, 0));
+                
+            delete_cmd(cmd);
             break;
         }
         if (strcmp(cmd -> name, "cd") == 0) {
@@ -77,7 +74,7 @@ int main(int argc, char **argv) {
     }
 
     clear_history();
-    return 0;
+    return exitVal;
 }
 
 char *prompt(int val) {

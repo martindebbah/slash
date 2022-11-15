@@ -70,6 +70,18 @@ int getNbParam(parametres *p) {
     return getNbParam(p -> suivant) + 1;
 }
 
+char *getParamAt(commande *cmd, int i) {
+    if (!cmd)
+        return NULL;
+    return getParam(cmd -> param, i);
+}
+
+char *getParam(parametres *p, int i) {
+    if (!p || i < 0)
+        return NULL;
+    return i == 0 ? p -> str : getParam(p -> suivant, i - 1);
+}
+
 void delete_param(parametres *p) {
     if (p -> suivant)
         delete_param(p -> suivant);

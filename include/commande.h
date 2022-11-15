@@ -29,7 +29,11 @@ parametres *create_param();
 int getNbParam(parametres *p);
 
 // Renvoie le paramètre à la position i
-char *getParamAt(int i);
+// La position 0 étant la première position de la liste
+char *getParamAt(commande *cmd, int i);
+
+// Renvoie le paramètre si c'est le i-ème de la liste
+char *getParam(parametres *p, int i);
 
 // Désaloue la mémoire prise par les paramètres.
 void delete_param(parametres *p);

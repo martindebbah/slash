@@ -7,8 +7,8 @@ typedef struct parametres parametres;
 // Le type de données pour les commandes.
 struct commande {
     char *name;
-    parametres *premier;
-    parametres *dernier;
+    int nbParam;
+    parametres *param;
 };
 
 struct parametres {
@@ -25,10 +25,13 @@ void delete_cmd(commande *cmd);
 // Crée une liste de paramètres
 parametres *create_param();
 
+// Retourne le nombre de paramètres
+int getNbParam(parametres *p);
+
+// Renvoie le paramètre à la position i
+char *getParamAt(int i);
+
 // Désaloue la mémoire prise par les paramètres.
 void delete_param(parametres *p);
-
-// Ajoute un parametre à commande
-void add_param(commande * cmd, parametres *p);
 
 #endif

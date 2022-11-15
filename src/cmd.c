@@ -99,7 +99,7 @@ int cmd_cd(commande *cmd) {
 
     //TODO 1 
     
-    if (cmd->premier == NULL ) {
+    if (!cmd -> param) {
         chdir(getenv("HOME"));
         return 0;
     }

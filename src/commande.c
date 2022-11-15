@@ -20,15 +20,8 @@ commande *create_cmd(char *line) {
         goto error;
     cmd -> name[strlen(str)] = '\0';
 
-    cmd->premier = NULL;
-    cmd->dernier = NULL;
-    
-    str = strtok(NULL, sep);
-    while (str != NULL){
-        parametres * p = create_param(str);
-        add_param(cmd, p);
-        str = strtok(NULL, sep);
-    }
+    cmd -> param = create_param();
+    cmd -> nbParam = getNbParam(cmd -> param);
 
     return cmd;
 
@@ -38,50 +31,48 @@ commande *create_cmd(char *line) {
     return NULL;
 }
 
-parametres *create_param(char * name) {
-    if(name == NULL) return NULL;
+parametres *create_param() {
+    char *str = strtok(NULL, " ");
+    if (!str)
+        return NULL;
+        
     parametres *p = malloc(sizeof(parametres));
     if (!p)
-        return NULL;
+        goto error;
 
-    p -> str = malloc(sizeof(char));
+    p -> str = malloc(strlen(str));
+    memcpy(p -> str, str, strlen(str));
     if (!p -> str)
         goto error;
-    memcpy(p -> str, name, strlen(name));
-    p->str[strlen(name)] = '\0';
+    p->str[strlen(str)] = '\0';
 
-    p -> suivant = NULL;
+    p -> suivant = create_param();
 
     return p;
 
     error:
-        delete_param(p);
+        if (p)
+            delete_param(p);
         return NULL;
 }
 
 void delete_cmd(commande *cmd) {
-    if (cmd -> name != NULL)
+    if (cmd -> name)
         free(cmd -> name);
-    if (cmd -> premier != NULL)
-        delete_param(cmd -> premier);
+    if (cmd -> param)
+        delete_param(cmd -> param);
     free(cmd);
 }
 
+int getNbParam(parametres *p) {
+    if (!p)
+        return 0;
+    return getNbParam(p -> suivant) + 1;
+}
+
 void delete_param(parametres *p) {
-    if (p -> suivant != NULL)
+    if (p -> suivant)
         delete_param(p -> suivant);
     free(p -> str);
     free(p);
-}
-
-void add_param(commande * cmd, parametres *p){
-    if(p == NULL) return;
-    if(cmd->dernier != NULL){
-        cmd->dernier->suivant = p;
-        cmd->dernier = cmd->dernier->suivant;
-    }
-    else {
-        cmd->premier = p;
-        cmd->dernier = cmd->premier;
-    }
 }

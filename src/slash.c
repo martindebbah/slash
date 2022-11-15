@@ -19,19 +19,40 @@ int main(int argc, char **argv) {
     
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
-        char *line = readline(prompt(retVal));
+        char *p = prompt(retVal);
+        char *line = readline(p);
+
+        if (strlen(line) == 0) {
+            free(line);
+            free(p);
+            continue;
+        }
+
+        // Historique
+        char *hist = malloc(strlen(line) + 1);
+        if (hist != NULL)
+            memcpy(hist, line, strlen(line));
+        hist[strlen(line)] = '\0';
 
         // Découpage de la ligne de commande
         commande *cmd = create_cmd(line);
         if (!cmd) {
             free(line);
+            free(hist);
+            free(p);
             retVal = 127;
             continue;
         }
 
+        parametres *param = cmd -> param;
+        for (int i = 0; i < cmd -> nbParam; i++) {
+            printf("arg%d : %s\n", i, param -> str);
+            param = param -> suivant;
+        }
+
         // Ajout de la ligne à l'historique
-        add_history(line);
-        free(line);
+        add_history(hist);
+        free(hist);
 
         // Interprétation de la ligne de commande
 
@@ -52,6 +73,7 @@ int main(int argc, char **argv) {
             cmd_cd(cmd);
         }
         delete_cmd(cmd);
+        free(p);
     }
 
     clear_history();
@@ -69,9 +91,7 @@ char *prompt(int val) {
     }else { // Echec -> rouge
         i += changeColor(prompt + i, 'r'); // 5
     }
-    prompt[i++] = '[';
-    prompt[i++] = val + '0';
-    prompt[i++] = ']';
+    i += addVal(prompt + i, val);
 
     // Chemin du répertoire
     i += changeColor(prompt+ i, 'c'); // 5
@@ -112,6 +132,19 @@ int changeColor(char *s, char color) {
 int addToPrompt(char *p, char *s) {
     memcpy(p, s, strlen(s));
     return strlen(s);
+}
+
+int addVal(char *p, int val) {
+    int i = 0;
+    p[i++] = '[';
+    if (val < 0) {
+        p[i++] = '-';
+        p[i++] = '1';
+    }else {
+        p[i++] = val + '0';
+    }
+    p[i++] = ']';
+    return i;
 }
 
 char *cutPath(char *path, int max) {

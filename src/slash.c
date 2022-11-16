@@ -15,12 +15,11 @@
 int main(int argc, char **argv) {
 
     rl_outstream = stderr;
-    int retVal = 0;
-    int exitVal = 0;
+    int val = 0;
     
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
-        char *p = prompt(retVal);
+        char *p = prompt(val);
         char *line = readline(p); // Les couleurs du prompt ne s'affichent pas sur MacOS
         free(p);
 
@@ -39,7 +38,7 @@ int main(int argc, char **argv) {
         if (!cmd) {
             free(line);
             free(hist);
-            retVal = 127;
+            val = 127;
             continue;
         }
 
@@ -48,31 +47,47 @@ int main(int argc, char **argv) {
         free(line);
         free(hist);
 
-        // Interprétation de la ligne de commande
-
-        // Exécution des commandes (fork) et attente de la fin du processus fils
-        if (strcmp(cmd -> name, "pwd") == 0) {
-            //test
-            printf("%s \n",cmd_pwd());
-        }
-
-        // Si exit -> break
-        if (strcmp(cmd -> name, "exit") == 0) {
-            // Stocker la valeur de sortie
-            if (cmd -> nbParam > 0)
-                exitVal = atoi(getParamAt(cmd, 0)); // Convertir la valeur si possible !
-
-            delete_cmd(cmd);
-            break;
-        }
-        if (strcmp(cmd -> name, "cd") == 0) {
-            cmd_cd(cmd);
-        }
+        // Exécution des commandes
+        val = executeCmd(cmd);
         delete_cmd(cmd);
     }
 
     clear_history();
-    return exitVal;
+    return 1;
+}
+
+int executeCmd(commande *cmd) {
+    int val = 0; // val de retour des fonctions
+
+    if (strcmp(cmd -> name, "exit") == 0) { // Si exit -> break
+        // Stocker la valeur de sortie (0 si pas de paramètres)
+        if (cmd -> nbParam > 0) {
+            char *param = getParamAt(cmd, 0);
+            char *end;
+            long value = strtol(param, &end, 10);
+
+            if (end == param) { // Valeur en argument invalide
+                val = 2;
+            }else { // Valeur valide
+                val = (int) value;
+            } 
+        }
+
+        delete_cmd(cmd);
+        clear_history();
+        printf("Le processus slash s'est terminé avec le code de retour %d\n", val);
+        exit(val);
+
+    }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
+        printf("%s \n",cmd_pwd());
+
+    }else if (strcmp(cmd -> name, "cd") == 0) { // CD
+        cmd_cd(cmd);
+
+    } else // Aucune commande connue
+        val = 127;
+
+    return val;
 }
 
 char *prompt(int val) {
@@ -160,17 +175,21 @@ int addVal(char *p, int val) {
 }
 
 char *cutPath(char *path, int max) {
-    max -= 3;
-    int d = strlen(path);
+    max -= 3; // Pour "..." au début
+    int d = strlen(path); // On commence avec une balise sur le dernier caractère
     int i = d;
-    while (strlen(path) - i < max) {
+    while (strlen(path) - i < max) { // On lit les caractères de la fin vers le début
         if (path[i] == '/') {
-            d = i;
+            d = i; // On balise dès qu'on trouve un '/'
         }
         i--;
     }
+
+    // On ajoute "..."
     path[--d] = '.';
     path[--d] = '.';
     path[--d] = '.';
+
+    // On retourne ".../**", en ne coupant pas de nom de répertoire
     return path + d;
 }

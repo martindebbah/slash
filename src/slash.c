@@ -21,32 +21,31 @@ int main(int argc, char **argv) {
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
         char *p = prompt(retVal);
-        char *line = readline(p);
+        char *line = readline(p); // Les couleurs du prompt ne s'affichent pas sur MacOS
+        free(p);
 
-        if (strlen(line) == 0) {
+        if (!line || !*line || strlen(line) > MAX_ARGS_STRLEN) {
             free(line);
-            free(p);
             continue;
         }
 
         // Historique
-        char *hist = malloc(strlen(line) + 1);
-        if (hist != NULL)
+        char *hist = malloc(strlen(line));
+        if (hist)
             memcpy(hist, line, strlen(line));
-        hist[strlen(line)] = '\0';
 
         // Découpage de la ligne de commande
         commande *cmd = create_cmd(line);
         if (!cmd) {
             free(line);
             free(hist);
-            free(p);
             retVal = 127;
             continue;
         }
 
         // Ajout de la ligne à l'historique
         add_history(hist);
+        free(line);
         free(hist);
 
         // Interprétation de la ligne de commande
@@ -61,7 +60,7 @@ int main(int argc, char **argv) {
         if (strcmp(cmd -> name, "exit") == 0) {
             // Stocker la valeur de sortie
             if (cmd -> nbParam > 0)
-                exitVal = atoi(getParamAt(cmd, 0));
+                exitVal = atoi(getParamAt(cmd, 0)); // Convertir la valeur si possible !
 
             delete_cmd(cmd);
             break;
@@ -70,7 +69,6 @@ int main(int argc, char **argv) {
             cmd_cd(cmd);
         }
         delete_cmd(cmd);
-        free(p);
     }
 
     clear_history();
@@ -78,52 +76,51 @@ int main(int argc, char **argv) {
 }
 
 char *prompt(int val) {
-    int size = 46;  // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur)
-    char *prompt = malloc(size);    // + 1 pour le caractère null final
+    int size = 52;  // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur) + 6 (balises)
+    char *prompt = calloc(size, 1);    // +1 ('\0')
     int i = 0;
 
     // Valeur de retour
+    prompt[i++] = '\001';
     if (val == 0) { // Succès -> vert
-        i += changeColor(prompt, 'v'); // 5
+        i += changeColor(prompt + i, 'v');
     }else { // Echec -> rouge
-        i += changeColor(prompt + i, 'r'); // 5
+        i += changeColor(prompt + i, 'r');
     }
+    prompt[i++] = '\002';
     i += addVal(prompt + i, val);
 
     // Chemin du répertoire
-    i += changeColor(prompt+ i, 'c'); // 5
-    int max = size - i - 8; // (5 (couleur) + 3 ("$ \0"))
+    prompt[i++] = '\001';
+    i += changeColor(prompt + i, 'c');
+    prompt[i++] = '\002';
+    int max = size - i - 10;
     char *path = cutPath(cmd_pwd(), max);
     i += addToPrompt(prompt + i, path);
 
     // Prompt
-    i += changeColor(prompt + i, 'b'); // 5
+    prompt[i++] = '\001';
+    i += changeColor(prompt + i, 'b');
+    prompt[i++] = '\002';
     i += addToPrompt(prompt + i, "$ ");
-    prompt[i++] = '\0';
+
     return prompt;
 }
 
 int changeColor(char *s, char color) {
     char *c;
+    int size = 5;
     switch (color) {
-        case 'v': // Vert
-            c = "\033[32m";
-            memcpy(s, c, 5);
+        case 'v':   c = "\033[32m"; // Vert
             break;
-        case 'r': // Rouge
-            c = "\033[91m";
-            memcpy(s, c, 5);
+        case 'r':   c = "\033[91m"; // Rouge
             break;
-        case 'c': // Cyan
-            c = "\033[36m";
-            memcpy(s, c, 5);
+        case 'c':   c = "\033[36m"; // Cyan
             break;
-        case 'b': // Blanc
-            c = "\033[00m";
-            memcpy(s, c, 5);
-            break;
+        default:    c = "\033[00m"; // Blanc
     }
-    return 5;
+    memcpy(s, c, size);
+    return size;
 }
 
 int addToPrompt(char *p, char *s) {
@@ -132,38 +129,48 @@ int addToPrompt(char *p, char *s) {
 }
 
 int addVal(char *p, int val) {
+    char v[3] = {0};
+    int size;
+    if (val > -1) { // Valeurs positives
+        if (val < 10) { // Une case
+            size = 1;
+        } else if (val < 100) { // Deux cases
+            size = 2;
+        } else { // Trois cases
+            size = 3;
+        }
+        for (int i = 0; i < size; i++) {
+            char n = (val % 10) + '0'; // On récupère le chiffre des unités (dizaines/centaines pour i == 1/2)
+            v[size - i - 1] = n;
+            val /= 10; // On divise par 10 pour avoir le chiffre des dizaines (centaines pour i == 1)
+        }
+    } else { // Valeurs négatives (seulement -1 pour le moment)
+        size = 2;
+        v[0] = '-';
+        v[1] = '1';
+    }
+
     int i = 0;
     p[i++] = '[';
-    if (val < 0) {
-        p[i++] = '-';
-        p[i++] = '1';
-    }else {
-        p[i++] = val + '0';
-    }
+    memcpy(p + i, v, size);
+    i += size;
     p[i++] = ']';
+
     return i;
 }
 
 char *cutPath(char *path, int max) {
-    if (strlen(path) <= max)
-        return path;
-
-    int i = strlen(path) - max;
-    path[i] = '.';
-    path[i  + 1] = '.';
-    path[i + 2] = '.';
-    return path + i;
-
-    // int d = strlen(path);
-    // int i = d;
-    // while (strlen(path) - i < max) {
-    //     if (path[i] == '/') {
-    //         d = i;
-    //     }
-    //     i--;
-    // }
-    // path[--d] = '.';
-    // path[--d] = '.';
-    // path[--d] = '.';
-    // return path + d;
+    max -= 3;
+    int d = strlen(path);
+    int i = d;
+    while (strlen(path) - i < max) {
+        if (path[i] == '/') {
+            d = i;
+        }
+        i--;
+    }
+    path[--d] = '.';
+    path[--d] = '.';
+    path[--d] = '.';
+    return path + d;
 }

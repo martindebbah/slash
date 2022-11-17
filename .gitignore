@@ -1,1 +1,5 @@
 .sy5-2022-2023-projet-slash-autotests.nosync
+slash.dSYM/
+slash
+.gitignore
+.DS_Store

@@ -51,4 +51,14 @@ void string_truncate (struct string * str, size_t nchars) {
   str->length -= nchars;
 }
 
-
+char *copy(struct string *path) {
+  int l = path -> length;
+  char *ret = malloc(l + 1);
+  memcpy(ret, path -> data, l);
+  string_delete(path);
+  if (!ret) {
+    return NULL;
+  }
+  ret[l + 1] = '\0';
+  return ret;
+}

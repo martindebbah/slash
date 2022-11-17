@@ -65,7 +65,8 @@ char * cmd_pwd(){
     if(is_root(dir)){
         string_prepend(path, "/");
         closedir(dir);
-        return path->data;
+
+        return copy(path);
     }
     int parent_fd = openat(dirfd(dir),"..", O_RDONLY | O_DIRECTORY);
     DIR* parent = fdopendir(parent_fd);
@@ -85,7 +86,7 @@ char * cmd_pwd(){
     
     closedir(parent);
 
-    return path->data;
+    return copy(path);
 }
 
 int cmd_cd(commande *cmd) {

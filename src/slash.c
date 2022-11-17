@@ -79,10 +79,17 @@ int executeCmd(commande *cmd) {
         exit(val);
 
     }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
-        printf("%s \n",cmd_pwd());
+        char *wDir = cmd_pwd();
+        if (!wDir) {
+            printf("%s \n", wDir);
+            free(wDir);
+        }else {
+            perror("Erreur pwd");
+            return -1;
+        }
 
     }else if (strcmp(cmd -> name, "cd") == 0) { // CD
-        cmd_cd(cmd);
+        val = cmd_cd(cmd);
 
     } else // Aucune commande connue
         val = 127;
@@ -110,8 +117,10 @@ char *prompt(int val) {
     i += changeColor(prompt + i, 'c');
     prompt[i++] = '\002';
     int max = size - i - 10;
-    char *path = cutPath(cmd_pwd(), max);
+    char *wDir = cmd_pwd();
+    char *path = cutPath(wDir, max);
     i += addToPrompt(prompt + i, path);
+    free(wDir);
 
     // Prompt
     prompt[i++] = '\001';

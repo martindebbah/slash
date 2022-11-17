@@ -31,5 +31,8 @@ int string_append (struct string * dest, char * src);
 
 // Ajoute SRC au début de DEST
 int string_prepend(struct string * dest, char * src);
+
+// Copie et supprime le string
+char *copy(struct string *path);
   
 #endif // MYSTRING_H

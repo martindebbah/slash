@@ -100,34 +100,35 @@ int cmd_cd(commande *cmd) {
         // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
 
     //TODO 1 
-    if (cmd->param== NULL ) {
+    if (cmd->nbParam == 0 ) {
         chdir(getenv("HOME"));
         return 0;
     }
     //TODO 1 bis
-    if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0) && cmd->param->suivant == NULL) {
-        chdir(getenv("HOME"));
-        return 0;
-    }
-    //TODO 2 a)
-    if (strcmp(cmd->param->str, "-") == 0 && cmd->param->suivant == NULL) {
-        //chdir(getenv("OLDPWD")); ca marche pas encore
-        return 0;
-    }
-    //TODO 2 b)
-    if (strcmp(cmd->param->str, "-L") != 0 && 
-        strcmp(cmd->param->str, "-P") != 0 &&
-        strcmp(cmd->param->str, "-") != 0 &&
-        strcmp(cmd->param->str, "~") != 0 && 
-        cmd->param->suivant == NULL) {
-            if (chdir(cmd->param->str) == 0) {
-                return 0;
-            }
-            else {
-                printf("bash: cd: %s: Aucun fichier ou dossier de ce type\n", cmd->param->str);
-                return 1;
-            }            
+    if (cmd->nbParam < 2) {
+        if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0)) {
+            chdir(getenv("HOME"));
+            return 0;
         }
+        //TODO 2 a)
+        if (strcmp(cmd->param->str, "-") == 0) {
+            //chdir(getenv("OLDPWD")); ca marche pas encore
+            return 0;
+        }
+        //TODO 2 b)
+        if (strcmp(cmd->param->str, "-L") != 0 && 
+            strcmp(cmd->param->str, "-P") != 0 &&
+            strcmp(cmd->param->str, "-") != 0 &&
+            strcmp(cmd->param->str, "~") != 0) {
+                if (chdir(cmd->param->str) == 0) {
+                    return 0;
+                }
+                else {
+                    printf("bash: cd: %s: Aucun fichier ou dossier de ce type\n", cmd->param->str);
+                    return 1;
+                }            
+        }
+    }
     //TODO 2 c)
     //TDOD 2 d)
     return 1;

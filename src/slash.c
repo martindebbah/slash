@@ -92,11 +92,17 @@ int executeCmd(commande *cmd) {
         val = cmd_cd(cmd);
 
     }else { // Pas une commande interne
-        // char **p = paramToTab(cmd);
-        // int c = execvp(cmd -> name, p);
+        char **p = paramToTab(cmd);
+        pid_t pid = fork();
+        int c = 0;
+        if (pid == 0) { // Child
+            execvp(cmd -> name, p);
+        }else { // Parent
+            int status;
+            waitpid(pid, &status, 0);
+        }
+        // Comment retourne la valeur si échec ?
 
-        // if (c == -1) // Pas une commande externe
-            val = 127;
     }
 
     return val;
@@ -189,10 +195,10 @@ int addVal(char *p, int val) {
 }
 
 char *cutPath(char *path, int max) {
+    max -= 3; // Pour "..." au début
     if (strlen(path) <= max)
         return path;
         
-    max -= 3; // Pour "..." au début
     int d = strlen(path); // On commence avec une balise sur le dernier caractère
     int i = d;
     while (strlen(path) - i < max) { // On lit les caractères de la fin vers le début

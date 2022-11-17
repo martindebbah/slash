@@ -88,6 +88,7 @@ char * cmd_pwd(){
         parent = fdopendir(parent_fd);
     }
     
+    closedir(dir);
     closedir(parent);
     close(parent_fd);
 

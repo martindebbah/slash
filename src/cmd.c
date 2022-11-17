@@ -118,27 +118,9 @@ int cmd_cd(commande *cmd) {
 
     //TODO 1 
     if (cmd->nbParam == 0) {
-        printf("cd \n");
-        printf("voici le pwd avant le cd : %s\n", cmd_pwd());
-        char *dir = getenv("HOME");
-        printf("dir qui stocke getenv(HOME): %s\n", dir); //renvoie bien le chemin du home
-        if (chdir(dir) != 0) { //il ne va pas dans ce cas
-            perror("chdir pas ok");
-            return 1;
-        }
-        else {
-            /* Attention ! bon là c'est que des tests ça va mais fais gaffe à bien free les zones de mémoire qu'on 
-            dynamiquement. Par exemple ici, il faut free ce que renvoie cmd_pwd() */
-            printf("chdir ok\n");
-            printf("voici le pwd apres le cd : %s\n", cmd_pwd()); //renvoie bien le home du depot
-            return 0;
-        }
-    }
-
-
-
-
-    /*
+        chdir(getenv("HOME"));
+        return 0;
+    }    
     //TODO 1 bis
     if (cmd->nbParam < 2) {
         if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0)) {
@@ -166,6 +148,5 @@ int cmd_cd(commande *cmd) {
     }
     //TODO 2 c)
     //TDOD 2 d)
-    */
     return 1;
 }

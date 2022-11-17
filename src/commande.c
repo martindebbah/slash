@@ -40,11 +40,10 @@ parametres *create_param() {
     if (!p)
         goto error;
 
-    p -> str = malloc(strlen(str));
+    p -> str = calloc(strlen(str) + 1, 1);
     memcpy(p -> str, str, strlen(str));
     if (!p -> str)
         goto error;
-    p->str[strlen(str)] = '\0';
 
     p -> suivant = create_param();
 
@@ -85,6 +84,7 @@ char *getParam(parametres *p, int i) {
 void delete_param(parametres *p) {
     if (p -> suivant)
         delete_param(p -> suivant);
-    free(p -> str);
+    if (p -> str)
+        free(p -> str);
     free(p);
 }

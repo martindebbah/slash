@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
         }
 
         // Historique
-        char *hist = malloc(strlen(line));
+        char *hist = calloc(strlen(line) + 1, 1);
         if (hist)
             memcpy(hist, line, strlen(line));
 
@@ -80,7 +80,7 @@ int executeCmd(commande *cmd) {
 
     }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
         char *wDir = cmd_pwd();
-        if (!wDir) {
+        if (wDir) {
             printf("%s \n", wDir);
             free(wDir);
         }else {
@@ -98,8 +98,8 @@ int executeCmd(commande *cmd) {
 }
 
 char *prompt(int val) {
-    int size = 52;  // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur) + 6 (balises)
-    char *prompt = calloc(size, 1);    // +1 ('\0')
+    int size = 52;  // 30 (longueur maximale du prompt) + 15 (Pour changer la couleur) + 6 (balises) + 1 ('\0')
+    char *prompt = calloc(size, 1);
     int i = 0;
 
     // Valeur de retour

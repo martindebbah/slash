@@ -117,10 +117,26 @@ int cmd_cd(commande *cmd) {
         // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
 
     //TODO 1 
-    if (cmd->nbParam == 0 ) {
-        chdir(getenv("HOME")); // Le memory leak vient de HOME -> je pense que ça fait remonter trop loin
-        return 0;
+    if (cmd->nbParam == 0) {
+        printf("cd \n");
+        printf("voici le pwd avant le cd : %s\n", cmd_pwd());
+        char *dir = getenv("HOME");
+        printf("dir qui stocke getenv(HOME): %s\n", dir); //renvoie bien le chemin du home
+        if (chdir(dir) != 0) { //il ne va pas dans ce cas
+            perror("chdir pas ok");
+            return 1;
+        }
+        else {
+            printf("chdir ok\n");
+            printf("voici le pwd apres le cd : %s\n", cmd_pwd()); //renvoie bien le home du depot
+            return 0;
+        }
     }
+
+
+
+
+    /*
     //TODO 1 bis
     if (cmd->nbParam < 2) {
         if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0)) {
@@ -148,5 +164,6 @@ int cmd_cd(commande *cmd) {
     }
     //TODO 2 c)
     //TDOD 2 d)
+    */
     return 1;
 }

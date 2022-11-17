@@ -94,7 +94,6 @@ int executeCmd(commande *cmd) {
     }else { // Pas une commande interne
         char **p = paramToTab(cmd);
         pid_t pid = fork();
-        int c = 0;
         if (pid == 0) { // Child
             execvp(cmd -> name, p);
         }else { // Parent

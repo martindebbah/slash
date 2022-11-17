@@ -91,8 +91,13 @@ int executeCmd(commande *cmd) {
     }else if (strcmp(cmd -> name, "cd") == 0) { // CD
         val = cmd_cd(cmd);
 
-    } else // Aucune commande connue
-        val = 127;
+    }else { // Pas une commande interne
+        // char **p = paramToTab(cmd);
+        // int c = execvp(cmd -> name, p);
+
+        // if (c == -1) // Pas une commande externe
+            val = 127;
+    }
 
     return val;
 }

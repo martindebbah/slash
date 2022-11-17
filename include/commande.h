@@ -28,6 +28,9 @@ parametres *create_param();
 // Retourne le nombre de paramètres
 int getNbParam(parametres *p);
 
+// Retourne les paramètres sous forme de tableau
+char **paramToTab(commande *cmd);
+
 // Renvoie le paramètre à la position i
 // La position 0 étant la première position de la liste
 char *getParamAt(commande *cmd, int i);

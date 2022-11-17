@@ -69,6 +69,19 @@ int getNbParam(parametres *p) {
     return getNbParam(p -> suivant) + 1;
 }
 
+char **paramToTab(commande *cmd) {
+    int n = cmd -> nbParam;
+    char **p = malloc(sizeof(*p) * (n + 2));
+    memcpy(p[0], cmd -> name, strlen(cmd -> name));
+    for (int i = 0; i < n; i++) {
+        char *s = getParamAt(cmd, i);
+        p[i + 1] = calloc(strlen(s) + 1, 1);
+        memcpy(p[i + 1], s, strlen(s));
+    }
+    p[n + 1] = NULL;
+    return p;
+}
+
 char *getParamAt(commande *cmd, int i) {
     if (!cmd)
         return NULL;

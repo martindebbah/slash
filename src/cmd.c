@@ -118,7 +118,7 @@ int cmd_cd(commande *cmd) {
 
     //TODO 1 
     if (cmd->nbParam == 0 ) {
-        chdir(getenv("HOME"));
+        chdir(getenv("HOME")); // Le memory leak vient de HOME -> je pense que ça fait remonter trop loin
         return 0;
     }
     //TODO 1 bis

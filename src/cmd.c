@@ -127,6 +127,8 @@ int cmd_cd(commande *cmd) {
             return 1;
         }
         else {
+            /* Attention ! bon là c'est que des tests ça va mais fais gaffe à bien free les zones de mémoire qu'on 
+            dynamiquement. Par exemple ici, il faut free ce que renvoie cmd_pwd() */
             printf("chdir ok\n");
             printf("voici le pwd apres le cd : %s\n", cmd_pwd()); //renvoie bien le home du depot
             return 0;

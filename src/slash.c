@@ -189,6 +189,9 @@ int addVal(char *p, int val) {
 }
 
 char *cutPath(char *path, int max) {
+    if (strlen(path) <= max)
+        return path;
+        
     max -= 3; // Pour "..." au début
     int d = strlen(path); // On commence avec une balise sur le dernier caractère
     int i = d;

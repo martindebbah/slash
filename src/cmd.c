@@ -97,6 +97,8 @@ char * cmd_pwd(){
     return copy(path);
 
     error:
+        if (path)
+            string_delete(path);
         if (dir) {
             closedir(dir);
             if (parent) {

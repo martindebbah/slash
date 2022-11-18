@@ -86,22 +86,23 @@ int executeCmd(commande *cmd) {
             free(wDir);
         }else {
             perror("Erreur pwd");
-            return -1;
+            return 1;
         }
 
     }else if (strcmp(cmd -> name, "cd") == 0) { // CD
         val = cmd_cd(cmd);
 
     }else { // Pas une commande interne
-        char **p = paramToTab(cmd);
-        pid_t pid = fork();
-        if (pid == 0) { // Child
-            execvp(cmd -> name, p);
-        }else { // Parent
-            int status;
-            waitpid(pid, &status, 0);
-        }
+        // char **p = paramToTab(cmd);
+        // pid_t pid = fork();
+        // if (pid == 0) { // Child
+        //     execvp(cmd -> name, p);
+        // }else { // Parent
+        //     int status;
+        //     waitpid(pid, &status, 0);
+        // }
         // Comment retourne la valeur si échec ?
+        val = 127;
 
     }
 

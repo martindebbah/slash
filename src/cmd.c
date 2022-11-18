@@ -79,7 +79,9 @@ char * cmd_pwd(){
 
     while(!is_root(dir)){
         char* dirname = get_dirname(dir,parent);
-        if(dirname == NULL) return NULL;
+        if(dirname == NULL)
+            goto error;
+
         string_prepend(path,dirname);
         string_prepend(path,"/");
         closedir(dir);

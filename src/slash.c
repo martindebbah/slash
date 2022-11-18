@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -131,6 +132,7 @@ char *prompt(int val) {
     char *path = cutPath(wDir, max);
     i += addToPrompt(prompt + i, path);
     free(wDir);
+    free(path);
 
     // Prompt
     prompt[i++] = '\001';
@@ -194,24 +196,33 @@ int addVal(char *p, int val) {
 }
 
 char *cutPath(char *path, int max) {
-    max -= 3; // Pour "..." au début
-    if (strlen(path) <= max)
-        return path;
-        
-    int d = strlen(path); // On commence avec une balise sur le dernier caractère
-    int i = d;
-    while (strlen(path) - i < max) { // On lit les caractères de la fin vers le début
-        if (path[i] == '/') {
-            d = i; // On balise dès qu'on trouve un '/'
-        }
-        i--;
+    char *p = calloc(max + 1, 1);
+    if (strlen(path) <= max) {
+        memcpy(p, path, strlen(path));
+    }else {
+        memcpy(p, "...", 3);
+        memcpy(p + 3, path + strlen(path) - max + 3, max - 3);
     }
+    return p;
 
-    // On ajoute "..."
-    path[--d] = '.';
-    path[--d] = '.';
-    path[--d] = '.';
+    // max -= 3; // Pour "..." au début
+    // if (strlen(path) <= max)
+    //     return path;
+        
+    // int d = strlen(path); // On commence avec une balise sur le dernier caractère
+    // int i = d;
+    // while (strlen(path) - i < max) { // On lit les caractères de la fin vers le début
+    //     if (path[i] == '/') {
+    //         d = i; // On balise dès qu'on trouve un '/'
+    //     }
+    //     i--;
+    // }
 
-    // On retourne ".../**", en ne coupant pas de nom de répertoire
-    return path + d;
+    // // On ajoute "..."
+    // path[--d] = '.';
+    // path[--d] = '.';
+    // path[--d] = '.';
+
+    // // On retourne ".../**", en ne coupant pas de nom de répertoire
+    // return path + d;
 }

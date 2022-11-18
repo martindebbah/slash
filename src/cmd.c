@@ -119,20 +119,41 @@ int cmd_cd(commande *cmd) {
         // c) si param->str == "-P ref" alors on se déplace dans ref en ignorant les liens symboliques avec return 0 ou si juste "-P" alors TODO 1 et return 1 sinon
         // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
 
+    char *oldpwd = getenv("OLDPWD"); // recupere l'ancien pwd
+    char *path = cmd_pwd(); // recupere le pwd actuel
+    setenv("OLDPWD", path, 1); // met a jour l'ancien pwd
+    free(path);
+    
     //TODO 1 
     if (cmd->nbParam == 0) {
-        chdir(getenv("HOME"));
-        return 0;
+        if (chdir(getenv("HOME")) != 0) {
+            perror("chdir pour cd sans arguments echec \n");
+            return 1;
+        }
+        else {
+            return 0;
+        }
     }    
     //TODO 1 bis
-    if (cmd->nbParam < 2) {
+    if (cmd->nbParam == 1) {
         if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0)) {
-            chdir(getenv("HOME"));
-            return 0;
+            if (chdir(getenv("HOME")) != 0) {
+                perror("chdir pour cd ~ ou cd -P echec \n");
+                return 1;
+            }
+            else {
+                return 0;
+            }
         }
         //TODO 2 a)
         if (strcmp(cmd->param->str, "-") == 0) {
-            //chdir(getenv("OLDPWD")); ca marche pas encore
+            if (chdir(oldpwd) != 0) {
+                perror("chdir pour cd - echec \n");
+                return 1;
+            }
+            else {
+                return 0;
+            }
             return 0;
         }
         //TODO 2 b)
@@ -148,6 +169,35 @@ int cmd_cd(commande *cmd) {
                     return 1;
                 }            
         }
+    }
+    if (cmd->nbParam == 2) {
+        //TODO 2 c)
+        if (strcmp(getParamAt(cmd, 0), "-P") == 0) {
+            if (chdir(getParamAt(cmd, 1)) != 0) {
+                perror("chdir pour cd -P repertoire echec \n");
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
+        else if (strcmp(getParamAt(cmd, 0), "-L") == 0) {
+            if (chdir(getParamAt(cmd, 1)) != 0) {
+                perror("chdir pour cd -L repertoire echec \n");
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
+        else {
+            printf("bash: cd: option non valable\n");
+            printf("cd : utilisation : cd [-L|-P] [repertoire]\n");
+        }
+    }
+    if (cmd->nbParam > 2) {
+        printf("bash: cd: trop d'arguments\n");
+        return 1;
     }
     //TODO 2 c)
     //TDOD 2 d)

@@ -112,6 +112,7 @@ int cmd_cd(commande *cmd) {
     //Squelette de la fonction cmd_cd
     //TODO 1 : si param est null alors se déplacer à la racine du depot et return 0
     //TODO 1 bis : si param est "~" ou "-P" sans suivant alors on se déplace à la racine du depot et return 0
+    //TODO 1 ter : si param est "-L" sans suivant alors on se déplace à la racine du depot en acceptant les liens symbolique et return 0
     //TODO 2 : sinon
         // a) si param->str == '-' alors se déplacer dans le répertoire précédent et return 0
             //garder en mémoire le rep précédent donc avant dernier pwd
@@ -134,11 +135,21 @@ int cmd_cd(commande *cmd) {
             return 0;
         }
     }    
-    //TODO 1 bis
     if (cmd->nbParam == 1) {
+        //TODO 1 bis
         if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0)) {
             if (chdir(getenv("HOME")) != 0) {
                 perror("chdir pour cd ~ ou cd -P echec \n");
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
+        //TODO 1 ter
+        if (strcmp(cmd->param->str, "-L") == 0) {
+            if (chdir(getenv("HOME")) != 0) {
+                perror("chdir pour cd -L echec \n");
                 return 1;
             }
             else {
@@ -154,7 +165,6 @@ int cmd_cd(commande *cmd) {
             else {
                 return 0;
             }
-            return 0;
         }
         //TODO 2 b)
         if (strcmp(cmd->param->str, "-L") != 0 && 
@@ -181,6 +191,7 @@ int cmd_cd(commande *cmd) {
                 return 0;
             }
         }
+        //TODO 2 d)
         else if (strcmp(getParamAt(cmd, 0), "-L") == 0) {
             if (chdir(getParamAt(cmd, 1)) != 0) {
                 perror("chdir pour cd -L repertoire echec \n");
@@ -191,15 +202,21 @@ int cmd_cd(commande *cmd) {
             }
         }
         else {
-            printf("bash: cd: option non valable\n");
-            printf("cd : utilisation : cd [-L|-P] [repertoire]\n");
+            if (getParamAt(cmd, 0)[0] == '-') {
+                printf("bash: cd: option non valable\n");
+                printf("cd : utilisation : cd [-L|-P] [repertoire]\n");
+                return 1;
+            }
+            else {
+                printf("bash: cd: trop d'arguments\n");
+                return 1;
+            }
         }
     }
     if (cmd->nbParam > 2) {
         printf("bash: cd: trop d'arguments\n");
         return 1;
     }
-    //TODO 2 c)
-    //TDOD 2 d)
+    perror("aucun cas de cd fonctionne : echec \n");
     return 1;
 }

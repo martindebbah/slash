@@ -17,11 +17,6 @@ struct string * string_new(size_t capacity);
 void string_delete(struct string * str);
 // Détruit une chaîne, en libérant la mémoire occupée.
 
-int string_append (struct string * dest, char * src);
-// Met à jour dest en ajoutant src à la *fin*.
-// Renvoie 1 en cas de réussite, 0 en cas d'échec.
-// Échoue sans rien modifier si le buffer n'est pas assez grand.
-
 void string_truncate (struct string * str, size_t nchars);
 // Tronque la chaîne en enlevant les nchars derniers caractères
 // (ou tous les caractères s'il y en a moins de nchars).

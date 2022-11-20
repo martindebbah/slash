@@ -19,6 +19,9 @@ int main(int argc, char **argv) {
     int val = 0;
     
     while (1) {
+        char *pwd = cmd_pwd();
+        setenv("PWD", pwd, 1);
+        free(pwd);
         // Affichage du prompt + récupération de la ligne de commande
         char *p = prompt(val);
         char *line = readline(p); // Les couleurs du prompt ne s'affichent pas sur MacOS
@@ -82,7 +85,7 @@ int executeCmd(commande *cmd) {
     }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
         char *wDir = cmd_pwd();
         if (wDir) {
-            printf("%s \n", wDir);
+            printf("%s\n", wDir);
             free(wDir);
         }else {
             perror("Erreur pwd");

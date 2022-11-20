@@ -33,7 +33,7 @@ static int is_root(DIR* dir){
 /*
     Renvoie le nom du repertoire dir
 */
-static char* get_dirname(DIR* dir, DIR* parent){
+static char* get_dirname(DIR* dir, DIR* parent, int followSymLink) {
     struct stat st;
     struct dirent *entry;
 
@@ -49,17 +49,37 @@ static char* get_dirname(DIR* dir, DIR* parent){
         entry = readdir(parent);
         if(entry == NULL) return NULL;
         if(strcmp(entry->d_name,".") == 0 || strcmp(entry->d_name,"..") == 0) continue;
-        if(fstatat(dirfd(parent), entry->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) return NULL;
+        /*
+        Comment utiliser AT_SYMLINK_FOLLOW ??
+        */
+        // if (followSymLink) {
+            // if(fstatat(dirfd(parent), entry->d_name, &st, AT_SYMLINK_FOLLOW) < 0) return NULL;
+        // }else {
+            if(fstatat(dirfd(parent), entry->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) return NULL;
+        // }
 
         if(dir_ino == st.st_ino && dir_dev == st.st_dev) return entry->d_name;
     }
     
 }
 
+char *cmd_pwd(commande *cmd) {
+    if (cmd -> nbParam == 0)
+        return pwd(1);
+    if (cmd -> nbParam == 1 && (strcmp(getParamAt(cmd, 0), "-L") == 0 || strcmp(getParamAt(cmd, 0), "-P") == 0)) {
+        if (strcmp(getParamAt(cmd, 0), "-L") == 0)
+            return pwd(1);
+        return pwd(0);
+    }
+    char *ret = calloc(24, 1);
+    memcpy(ret, "pwd: too many arguments", 23);
+    return ret;
+}
+
 /*
     Renvoie le chemin absolu du repertoire courant
 */
-char * cmd_pwd(){
+char * pwd(int followSymLink){
     struct string* path = string_new(100);
     DIR* dir = opendir(".");
     if (!dir)
@@ -78,7 +98,7 @@ char * cmd_pwd(){
         goto error;
 
     while(!is_root(dir)){
-        char* dirname = get_dirname(dir,parent);
+        char* dirname = get_dirname(dir, parent, followSymLink);
         if(dirname == NULL)
             goto error;
 
@@ -123,7 +143,7 @@ int cmd_cd(commande *cmd) {
         // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
 
     char *oldpwd = getenv("OLDPWD"); // recupere l'ancien pwd
-    char *path = cmd_pwd(); // recupere le pwd actuel
+    char *path = pwd(1); // recupere le pwd actuel
     setenv("OLDPWD", path, 1); // met a jour l'ancien pwd
     free(path);
     

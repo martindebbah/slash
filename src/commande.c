@@ -14,11 +14,10 @@ commande *create_cmd(char *line) {
     if (!str)
         goto error;
     
-    cmd -> name = malloc(strlen(str) + 1);
+    cmd -> name = calloc(strlen(str) + 1, 1);
     memcpy(cmd -> name, str, strlen(str));
     if (!cmd -> name)
         goto error;
-    cmd -> name[strlen(str)] = '\0';
 
     cmd -> param = create_param();
     cmd -> nbParam = getNbParam(cmd -> param);

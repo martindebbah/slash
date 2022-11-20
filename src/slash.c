@@ -19,9 +19,6 @@ int main(int argc, char **argv) {
     int val = 0;
     
     while (1) {
-        char *pwd = cmd_pwd();
-        setenv("PWD", pwd, 1);
-        free(pwd);
         // Affichage du prompt + récupération de la ligne de commande
         char *p = prompt(val);
         char *line = readline(p); // Les couleurs du prompt ne s'affichent pas sur MacOS
@@ -83,7 +80,7 @@ int executeCmd(commande *cmd) {
         exit(val);
 
     }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
-        char *wDir = cmd_pwd();
+        char *wDir = cmd_pwd(cmd);
         if (wDir) {
             printf("%s\n", wDir);
             free(wDir);
@@ -132,7 +129,7 @@ char *prompt(int val) {
     i += changeColor(prompt + i, 'c');
     prompt[i++] = '\002';
     int max = size - i - 10;
-    char *wDir = cmd_pwd();
+    char *wDir = pwd(1);
     char *path = cutPath(wDir, max);
     i += addToPrompt(prompt + i, path);
     free(wDir);

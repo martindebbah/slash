@@ -65,7 +65,7 @@ static char* get_dirname(DIR* dir, DIR* parent, int followSymLink) {
 
 char *cmd_pwd(commande *cmd) {
     if (cmd -> nbParam == 0)
-        return pwd(0);
+        return pwd(1);
     if (cmd -> nbParam == 1) {
         if(strcmp(getParamAt(cmd, 0), "-L") == 0) return pwd(1);
         else if(strcmp(getParamAt(cmd, 0), "-P") == 0) return pwd(0);
@@ -143,7 +143,7 @@ int cmd_cd(commande *cmd) {
         // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
 
     char *oldpwd = getenv("OLDPWD"); // recupere l'ancien pwd
-    char *path = pwd(0); // recupere le pwd actuel
+    char *path = pwd(1); // recupere le pwd actuel
     setenv("OLDPWD", path, 1); // met a jour l'ancien pwd
     free(path);
     

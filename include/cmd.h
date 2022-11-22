@@ -15,5 +15,6 @@ Change de repertoire de travail courant en le repertoire ref (s'il s'agit d'une 
 La valeur de retour est 0 en cas de succes, 1 en cas d'echec.
 */
 int cmd_cd();
+char *update_path(char *path, char *up);
 
 #endif

@@ -68,12 +68,15 @@ char *cmd_pwd(commande *cmd) {
     if (cmd -> nbParam == 0)
         return pwd(1);
     if (cmd -> nbParam == 1) {
-        if(strcmp(getParamAt(cmd, 0), "-L") == 0) return pwd(1);
-        else if(strcmp(getParamAt(cmd, 0), "-P") == 0) return pwd(0);
-        else return pwd(0);
+        if(strcmp(getParamAt(cmd, 0), "-L") == 0)
+            return pwd(1);
+
+        if(strcmp(getParamAt(cmd, 0), "-P") == 0)
+            return pwd(0);
     }
-    char *ret = calloc(24, 1);
-    memcpy(ret, "pwd: too many arguments", 23);
+
+    char *ret = calloc(31, 1);
+    memcpy(ret, "slash: pwd: too many arguments", 30);
     return ret;
 }
 
@@ -207,6 +210,7 @@ int cmd_cd(commande *cmd) {
         }
 
         if (chdir(newpwd) != 0) { // Changement de dossier
+            perror("slash: cd");
             free(newpwd);
             goto error;
         }
@@ -215,8 +219,10 @@ int cmd_cd(commande *cmd) {
         setenv("PWD", newpwd, 1);
         free(newpwd);
     }else { // Option "-P"
-        if (chdir(path) != 0) // Changement de dossier
+        if (chdir(path) != 0) { // Changement de dossier
+            perror("slash: cd");
             goto error;
+        }
         
             char *dir = pwd(0);
             setenv("PWD", dir, 1); // Changement de variable d'environnement pour "pwd -L"
@@ -258,7 +264,8 @@ char *update_path(char *path, char *up) {
         } else if (strcmp(str, ".") == 0) { // Si '.'
             // Ne fait rien
         }else {
-            string_append(updated, "/"); // Ajoute '/'
+            if (updated -> length > 1) // Si pas seulement '/'
+                string_append(updated, "/"); // Ajoute '/'
             string_append(updated, str); // Ajoute l'élément
         }
         str = strtok(NULL, "/"); // Passe à l'élément suivant

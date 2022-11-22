@@ -198,7 +198,17 @@ int cmd_cd(commande *cmd) {
     if (!path)
         goto error;
 
-    if (l) { // Si pas option "-P"
+    if (!l) { // Option "-P"
+        if (chdir(path) != 0) { // Changement de dossier
+            l = 1; // Si "-P" ne fonctionne pas on essaie "-L"
+        }else {
+            char *dir = pwd(0);
+            setenv("PWD", dir, 1); // Changement de variable d'environnement pour "pwd -L"
+            free(dir);
+        }
+    }
+
+    if (l) { // Si pas option "-P" (ou échec)
         char *newpwd = calloc(size, 1);
         if (path[0] == '/') { // C'est la racine
             memcpy(newpwd, path, strlen(path));
@@ -210,23 +220,17 @@ int cmd_cd(commande *cmd) {
         }
 
         if (chdir(newpwd) != 0) { // Changement de dossier
-            perror("slash: cd");
             free(newpwd);
-            goto error;
+            if (chdir(path) != 0) { // On essaie "-P" si échec
+                perror("slash: cd"); // La référence n'existe pas
+                goto error;
+            }
+            newpwd = pwd(0);
         }
 
         // Changement de variable d'environnement pour "pwd -L"
         setenv("PWD", newpwd, 1);
         free(newpwd);
-    }else { // Option "-P"
-        if (chdir(path) != 0) { // Changement de dossier
-            perror("slash: cd");
-            goto error;
-        }
-        
-            char *dir = pwd(0);
-            setenv("PWD", dir, 1); // Changement de variable d'environnement pour "pwd -L"
-            free(dir);
     }
 
     // Changement de variable d'environnement pour "cd -"
@@ -247,7 +251,10 @@ int cmd_cd(commande *cmd) {
         return 1;
 }
 
-char *update_path(char *path, char *up) {
+char *update_path(char *path, char *update) {
+    char *up = calloc(strlen(update) + 1, 1);
+    memcpy(up, update, strlen(update));
+
     struct string *updated = string_new(strlen(path) + strlen(up) + 2); // Le path corrigé
     string_append(updated, path); // On ajoute le path actuel
 

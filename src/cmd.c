@@ -146,7 +146,7 @@ int cmd_cd(commande *cmd) {
     char *path = calloc(size, 1);
     int l = 1;
     char *currentpwd = pwd(1);
-    char *oldpwd = calloc(strlen(getenv("OLDPWD")) + 1, 1);
+    char *oldpwd = calloc(size, 1);
     memcpy(oldpwd, getenv("OLDPWD"), strlen(getenv("OLDPWD")));
 
     // Si pas de paramètres
@@ -167,7 +167,7 @@ int cmd_cd(commande *cmd) {
             memcpy(path, oldpwd, strlen(oldpwd));
 
         }else if (getParamAt(cmd, 0)[0] == '-' && strlen(getParamAt(cmd, 0)) > 1) { // Si mauvaise option
-            printf("slash: cd: Option invalide: cd [-p | -L] <ref>\n");
+            printf("slash: cd: Option invalide: cd [-P | -L] <ref>\n");
             goto error;
 
         }else {// Si ref -> "-L ref"
@@ -185,13 +185,13 @@ int cmd_cd(commande *cmd) {
             memcpy(path, getParamAt(cmd, 1), strlen(getParamAt(cmd, 1)));
 
         }else { // Option invalide
-            perror("slash: cd: Option invalide: cd [-p | -L] <ref>\n");
+            perror("slash: cd: Option invalide: cd [-P | -L] <ref>\n");
             goto error;
         }
     }
 
     if (cmd -> nbParam >= 3) {
-        perror("slash: cd: Trop d'arguments: cd [-p | -L] <ref>\n");
+        perror("slash: cd: Trop d'arguments: cd [-P# | -L] <ref>\n");
         goto error;
     }
 
@@ -280,6 +280,11 @@ char *update_path(char *path, char *update) {
 
     // Retourne le path et désalloue la struct string
     return copy(updated);
+}
+
+void cmd_exit(int val) {
+    printf("Le processus slash s'est terminé avec le code de retour %d\n", val);
+    exit(val);
 }
 
 // int cmd_cd(commande *cmd) {

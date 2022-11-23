@@ -51,7 +51,7 @@ cmd.c, commandes.c, mystring.c et slash.c qui sont l'implémentation des fichier
     - char *copy(struct string *path) : Copie et supprime le string.
 
 - Pour slash.c :
-    - int executeCmd(commande *cmd) : Exécute la commande.
+    - int executeCmd(commande *cmd, int val) : Exécute la commande.
     - char *prompt(int val) : Renvoie le prompt à afficher.
     - int changeColor(char *s, char color) : Change la couleur du prompt.
     - int addToPrompt(char *p, char *s) : Ajoute s au prompt.

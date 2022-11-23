@@ -17,4 +17,7 @@ La valeur de retour est 0 en cas de succes, 1 en cas d'echec.
 int cmd_cd();
 char *update_path(char *path, char *up);
 
+// Termine le processus slash avec la valeur de sortie 'val'
+void cmd_exit(int val);
+
 #endif

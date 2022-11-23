@@ -2,7 +2,7 @@
 #define SLASH
 
 // Exécute la commande
-int executeCmd(commande *cmd);
+int executeCmd(commande *cmd, int val);
 
 // Renvoie le prompt à afficher
 char *prompt(int val);

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <signal.h>
 #include "cmd.h"
 #include "commande.h"
 #include "slash.h"
@@ -15,8 +16,19 @@
 
 int main(int argc, char **argv) {
 
+    // struct sigaction sigact;
+    // memset(&sigact, 0, sizeof(struct sigaction));
+    // sigact.sa_handler = SIG_IGN;
+
+    // if (sigaction(SIGINT, &sigact, NULL) != 0 && sigaction(SIGTERM, &sigact, NULL) != 0)
+    //     exit(0);
+
     rl_outstream = stderr;
-    int val = 0;
+    int val = 0; // La valeur de retour des commandes
+
+    char *oldpwd = pwd(1);
+    setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour éviter une qeg fault
+    free(oldpwd);                             // lors du premier appel à cd.
     
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
@@ -24,9 +36,13 @@ int main(int argc, char **argv) {
         char *line = readline(p); // Les couleurs du prompt ne s'affichent pas sur MacOS
         free(p);
 
-        if (!line || !*line || strlen(line) > MAX_ARGS_STRLEN) {
-            free(line);
-            continue;
+        // Si la ligne est NULL, est trop longue ou est une chaîne de caractères vide
+        if (!line || strlen(line) > MAX_ARGS_STRLEN) {        
+            if (line == NULL) { // Si la ligne est NULL (EOF ou Ctrl-D)
+                free(line);
+                cmd_exit(val); // On quitte le programme
+            }else // Si la ligne est vide ou trop longue, on attend la prochaine commande
+                continue;
         }
 
         // Historique
@@ -49,7 +65,7 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = executeCmd(cmd);
+        val = executeCmd(cmd, val);
         delete_cmd(cmd);
     }
 
@@ -57,11 +73,10 @@ int main(int argc, char **argv) {
     return 1;
 }
 
-int executeCmd(commande *cmd) {
-    int val = 0; // val de retour des fonctions
+int executeCmd(commande *cmd, int val) {
 
     if (strcmp(cmd -> name, "exit") == 0) { // Si exit -> break
-        // Stocker la valeur de sortie (0 si pas de paramètres)
+        // Stocker la valeur de sortie si spécifiée
         if (cmd -> nbParam > 0) {
             char *param = getParamAt(cmd, 0);
             char *end;
@@ -76,8 +91,7 @@ int executeCmd(commande *cmd) {
 
         delete_cmd(cmd);
         clear_history();
-        printf("Le processus slash s'est terminé avec le code de retour %d\n", val);
-        exit(val);
+        cmd_exit(val);
 
     }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
         char *wDir = cmd_pwd(cmd);

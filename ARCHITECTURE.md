@@ -41,6 +41,7 @@ cmd.c, commandes.c, mystring.c et slash.c qui sont l'implémentation des fichier
     - char *getParamAt(commande *cmd, int i) : Renvoie le paramètre à la position i (la position 0 étant la première position de la liste).
     - char *getParam(parametres *p, int i) : Renvoie le paramètre si c'est le i-ème de la liste.
     - void delete_param(parametres *p) : Désaloue la mémoire prise par les paramètres.
+    - char *update_path(char *path, char *update) : Créer un path en résolvant les liens symboliques
 
 - Pour mystring.c :
     - struct string * string_new(size_t capacity) : Crée une nouvelle chaîne de longueur 0 et de capacité donnée, allouée sur le tas (c'est-à-dire avec malloc).

@@ -7,7 +7,9 @@
 Affiche la (plus precisement, une) reference absolue du repertoire de travail courant avec les options -P et -L.
 La valeur de retour est 0 en cas de succes, 1 en cas d'echec.
 */
-char * cmd_pwd(commande *cmd);
+int cmd_pwd(commande *cmd);
+
+// Renvoie le pwd (ne pas oublier de free)
 char * pwd(int followSymLink);
 
 /*

@@ -64,20 +64,25 @@ static char* get_dirname(DIR* dir, DIR* parent) {
     
 }
 
-char *cmd_pwd(commande *cmd) {
+int cmd_pwd(commande *cmd) {
+    char *dir;
     if (cmd -> nbParam == 0)
-        return pwd(1);
+        dir = pwd(1);
+
     if (cmd -> nbParam == 1) {
         if(strcmp(getParamAt(cmd, 0), "-L") == 0)
-            return pwd(1);
+            dir = pwd(1);
 
         if(strcmp(getParamAt(cmd, 0), "-P") == 0)
-            return pwd(0);
+            dir = pwd(0);
     }
 
-    char *ret = calloc(31, 1);
-    memcpy(ret, "slash: pwd: too many arguments", 30);
-    return ret;
+    if (!dir)
+        return 1;
+
+    printf("%s\n", dir);
+    free(dir);
+    return 0;
 }
 
 /*
@@ -167,7 +172,7 @@ int cmd_cd(commande *cmd) {
             memcpy(path, oldpwd, strlen(oldpwd));
 
         }else if (getParamAt(cmd, 0)[0] == '-' && strlen(getParamAt(cmd, 0)) > 1) { // Si mauvaise option
-            printf("slash: cd: Option invalide: cd [-P | -L] <ref>\n");
+            printf("slash: cd: Option invalide: cd [-P | -L] [ref | -]\n");
             goto error;
 
         }else {// Si ref -> "-L ref"
@@ -185,13 +190,13 @@ int cmd_cd(commande *cmd) {
             memcpy(path, getParamAt(cmd, 1), strlen(getParamAt(cmd, 1)));
 
         }else { // Option invalide
-            perror("slash: cd: Option invalide: cd [-P | -L] <ref>\n");
+            printf("slash: cd: Option invalide: cd [-P | -L] [ref | -]\n");
             goto error;
         }
     }
 
     if (cmd -> nbParam >= 3) {
-        perror("slash: cd: Trop d'arguments: cd [-P# | -L] <ref>\n");
+        printf("slash: cd: Trop d'arguments: cd [-P | -L] [ref | -]\n");
         goto error;
     }
 
@@ -222,7 +227,7 @@ int cmd_cd(commande *cmd) {
         if (chdir(newpwd) != 0) { // Changement de dossier
             free(newpwd);
             if (chdir(path) != 0) { // On essaie "-P" si échec
-                perror("slash: cd"); // La référence n'existe pas
+                printf("slash: cd: Référence invalide: cd [-P | -L] [ref | -]\n"); // La référence n'existe pas
                 goto error;
             }
             newpwd = pwd(0);

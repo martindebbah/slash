@@ -14,17 +14,10 @@
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
 
+static int val = 0; // La valeur de retour des commandes
+
 int main(int argc, char **argv) {
-
-    // struct sigaction sigact;
-    // memset(&sigact, 0, sizeof(struct sigaction));
-    // sigact.sa_handler = SIG_IGN;
-
-    // if (sigaction(SIGINT, &sigact, NULL) != 0 && sigaction(SIGTERM, &sigact, NULL) != 0)
-    //     exit(0);
-
     rl_outstream = stderr;
-    int val = 0; // La valeur de retour des commandes
 
     char *oldpwd = pwd(1);
     setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour éviter une qeg fault
@@ -65,7 +58,7 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = executeCmd(cmd, val);
+        val = executeCmd(cmd);
         delete_cmd(cmd);
     }
 
@@ -73,7 +66,7 @@ int main(int argc, char **argv) {
     return 1;
 }
 
-int executeCmd(commande *cmd, int val) {
+int executeCmd(commande *cmd) {
 
     if (strcmp(cmd -> name, "exit") == 0) { // Si exit -> break
         // Stocker la valeur de sortie si spécifiée
@@ -94,14 +87,7 @@ int executeCmd(commande *cmd, int val) {
         cmd_exit(val);
 
     }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
-        char *wDir = cmd_pwd(cmd);
-        if (wDir) {
-            printf("%s\n", wDir);
-            free(wDir);
-        }else {
-            perror("Erreur pwd");
-            return 1;
-        }
+        val = cmd_pwd(cmd);
 
     }else if (strcmp(cmd -> name, "cd") == 0) { // CD
         val = cmd_cd(cmd);

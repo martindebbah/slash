@@ -31,6 +31,8 @@ cmd.c, commandes.c, mystring.c et slash.c qui sont l'implémentation des fichier
     - cmd_pwd(commande *cmd) : Affiche la (plus precisement, une) reference absolue du repertoire de travail courant avec les options -P et -L.
     - cmd_cd(commande *cmd) : Change de repertoire de travail courant.
     - Pour la commande interne exit elle est gêrée directement dans le fichier principal slash.c dans executeCmd(commande *cmd).
+    - cmd_exit(int val) : Termine le processus slash avec comme valeur de retour val (ou par défaut la valeur de retour de la dernière commande exécutée).
+
 
 - Pour commande.c :
     - commande *create_cmd(char *line) : Crée une commande à partir d'une ligne.

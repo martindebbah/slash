@@ -277,6 +277,7 @@ char *update_path(char *path, char *update) {
         }
         str = strtok(NULL, "/"); // Passe à l'élément suivant
     }
+    free(up);
 
     // Retourne le path et désalloue la struct string
     return copy(updated);

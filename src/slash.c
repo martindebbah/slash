@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
         free(p);
 
         // Si la ligne est NULL, est trop longue ou est une chaîne de caractères vide
-        if (!line || strlen(line) > MAX_ARGS_STRLEN) {        
+        if (!line || strlen(line) == 0 || strlen(line) > MAX_ARGS_STRLEN) {        
             if (line == NULL) { // Si la ligne est NULL (EOF ou Ctrl-D)
                 free(line);
                 cmd_exit(val); // On quitte le programme
@@ -67,7 +67,6 @@ int main(int argc, char **argv) {
 }
 
 int executeCmd(commande *cmd) {
-
     if (strcmp(cmd -> name, "exit") == 0) { // Si exit -> break
         // Stocker la valeur de sortie si spécifiée
         if (cmd -> nbParam > 0) {
@@ -93,17 +92,17 @@ int executeCmd(commande *cmd) {
         val = cmd_cd(cmd);
 
     }else { // Pas une commande interne
-        // char **p = paramToTab(cmd);
-        // pid_t pid = fork();
-        // if (pid == 0) { // Child
-        //     execvp(cmd -> name, p);
-        // }else { // Parent
-        //     int status;
-        //     waitpid(pid, &status, 0);
-        // }
-        // Comment retourne la valeur si échec ?
-        val = 127;
+        pid_t pid = fork();
 
+        if (pid == 0) { // Child
+            char **p = paramToTab(cmd);
+            execvp(cmd -> name, p);
+            
+        }else { // Parent
+            int status;
+            waitpid(pid, &status, 0);
+            val = WEXITSTATUS(status);
+        }
     }
 
     return val;
@@ -168,7 +167,12 @@ int addToPrompt(char *p, char *s) {
 int addVal(char *p, int val) {
     char v[3] = {0};
     int size;
-    if (val > -1) { // Valeurs positives
+    if (val == 255) { // Valeur SIGNAL
+        v[0] = 'S';
+        v[1] = 'I';
+        v[2] = 'G';
+        size = 3;
+    }else if (val > -1) { // Valeurs positives
         if (val < 10) { // Une case
             size = 1;
         } else if (val < 100) { // Deux cases

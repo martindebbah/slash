@@ -215,14 +215,14 @@ int cmd_cd(commande *cmd) {
 
     if (l) { // Si pas option "-P" (ou échec)
         char *newpwd = calloc(size, 1);
-        if (path[0] == '/') { // C'est la racine
-            memcpy(newpwd, path, strlen(path));
-
-        }else { // On modifie le path en conséquence
-            char *updated = update_path(currentpwd, path); // Voir fonction
-            memcpy(newpwd, updated, strlen(updated));
-            free(updated);
-        }
+        char *updated;
+        if (path[0] == '/') // C'est la racine
+            updated = update_path("/", path); // On modifie avec comme dir "/"
+        else
+            updated = update_path(currentpwd, path); // On modifie avec currentPwd
+        
+        memcpy(newpwd, updated, strlen(updated));
+        free(updated);
 
         if (chdir(newpwd) != 0) { // Changement de dossier
             free(newpwd);
@@ -292,116 +292,3 @@ void cmd_exit(int val) {
     printf("Le processus slash s'est terminé avec le code de retour %d\n", val);
     exit(val);
 }
-
-// int cmd_cd(commande *cmd) {
-//     //Squelette de la fonction cmd_cd
-//     //TODO 1 : si param est null alors se déplacer à la racine du depot et return 0
-//     //TODO 1 bis : si param est "~" ou "-P" sans suivant alors on se déplace à la racine du depot et return 0
-//     //TODO 1 ter : si param est "-L" sans suivant alors on se déplace à la racine du depot en acceptant les liens symbolique et return 0
-//     //TODO 2 : sinon
-//         // a) si param->str == '-' alors se déplacer dans le répertoire précédent et return 0
-//             //garder en mémoire le rep précédent donc avant dernier pwd
-//         // b) si param->str == ref alors on se déplace dans ref en ignorant les liens symboliques avec return 0 et return 1 avec message d'erreur sinon
-//         // c) si param->str == "-P ref" alors on se déplace dans ref en ignorant les liens symboliques avec return 0 ou si juste "-P" alors TODO 1 et return 1 sinon
-//         // d) si param->str == "-L ref" alors on se déplace dans ref en suivant les liens symboliques avec return 0 ou si juste "-L" alors TODO 1 et  et return 1 sinon
-
-//     char *oldpwd = getenv("OLDPWD"); // recupere l'ancien pwd
-//     char *path = pwd(1); // recupere le pwd actuel
-//     setenv("OLDPWD", path, 1); // met a jour l'ancien pwd
-//     free(path);
-    
-//     //TODO 1 
-//     if (cmd->nbParam == 0) {
-//         if (chdir(getenv("HOME")) != 0) {
-//             perror("chdir pour cd sans arguments echec \n");
-//             return 1;
-//         }
-//         else {
-//             return 0;
-//         }
-//     }    
-//     if (cmd->nbParam == 1) {
-//         //TODO 1 bis
-//         if ((strcmp(cmd->param->str, "~") == 0 || strcmp(cmd->param->str, "-P") == 0)) {
-//             if (chdir(getenv("HOME")) != 0) {
-//                 perror("chdir pour cd ~ ou cd -P echec \n");
-//                 return 1;
-//             }
-//             else {
-//                 return 0;
-//             }
-//         }
-//         //TODO 1 ter
-//         if (strcmp(cmd->param->str, "-L") == 0) {
-//             if (chdir(getenv("HOME")) != 0) {
-//                 perror("chdir pour cd -L echec \n");
-//                 return 1;
-//             }
-//             else {
-//                 return 0;
-//             }
-//         }
-//         //TODO 2 a)
-//         if (strcmp(cmd->param->str, "-") == 0) {
-//             if (chdir(oldpwd) != 0) {
-//                 perror("chdir pour cd - echec \n");
-//                 return 1;
-//             }
-//             else {
-//                 return 0;
-//             }
-//         }
-//         //TODO 2 b)
-//         if (strcmp(cmd->param->str, "-L") != 0 && 
-//             strcmp(cmd->param->str, "-P") != 0 &&
-//             strcmp(cmd->param->str, "-") != 0 &&
-//             strcmp(cmd->param->str, "~") != 0) {
-//                 if (chdir(cmd->param->str) == 0) {
-//                     return 0;
-//                 }
-//                 else {
-//                     printf("bash: cd: %s: Aucun fichier ou dossier de ce type\n", cmd->param->str);
-//                     return 1;
-//                 }            
-//         }
-//     }
-//     if (cmd->nbParam == 2) {
-//         //TODO 2 c)
-//         if (strcmp(getParamAt(cmd, 0), "-P") == 0) {
-//             if (chdir(getParamAt(cmd, 1)) != 0) {
-//                 perror("chdir pour cd -P repertoire echec \n");
-//                 return 1;
-//             }
-//             else {
-//                 return 0;
-//             }
-//         }
-//         //TODO 2 d)
-//         else if (strcmp(getParamAt(cmd, 0), "-L") == 0) {
-//             if (chdir(getParamAt(cmd, 1)) != 0) {
-//                 perror("chdir pour cd -L repertoire echec \n");
-//                 return 1;
-//             }
-//             else {
-//                 return 0;
-//             }
-//         }
-//         else {
-//             if (getParamAt(cmd, 0)[0] == '-') {
-//                 printf("bash: cd: option non valable\n");
-//                 printf("cd : utilisation : cd [-L|-P] [repertoire]\n");
-//                 return 1;
-//             }
-//             else {
-//                 printf("bash: cd: trop d'arguments\n");
-//                 return 1;
-//             }
-//         }
-//     }
-//     if (cmd->nbParam > 2) {
-//         printf("bash: cd: trop d'arguments\n");
-//         return 1;
-//     }
-//     perror("aucun cas de cd fonctionne : echec \n");
-//     return 1;
-// }

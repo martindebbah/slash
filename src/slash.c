@@ -58,12 +58,23 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = executeCmd(cmd);
+        val = joker_processing(cmd);
         delete_cmd(cmd);
     }
 
     clear_history();
     return 1;
+}
+
+int joker_processing(commande *cmd){
+    if(cmd->nbParam == 1){
+        if(strcmp(getParamAt(cmd,0),"*") == 0){
+            commande* new_cmd = parcours_repertoire(cmd, ".");
+            return executeCmd(new_cmd);
+        }
+        //char *str = strchr(getParamAt(cmd,0),'*');
+    }
+    return executeCmd(cmd);
 }
 
 int executeCmd(commande *cmd) {
@@ -96,6 +107,7 @@ int executeCmd(commande *cmd) {
 
         if (pid == 0) { // Child
             char **p = paramToTab(cmd);
+
             execvp(cmd -> name, p);
             
         }else { // Parent

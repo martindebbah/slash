@@ -22,4 +22,7 @@ char *update_path(char *path, char *up);
 // Termine le processus slash avec la valeur de sortie 'val'
 void cmd_exit(int val);
 
+// parcours le repertoire dir_to_open et stock chaque nom dans les paramètres de cmd
+commande* parcours_repertoire(commande *cmd, char* dir_to_open);
+
 #endif

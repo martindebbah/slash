@@ -64,6 +64,32 @@ static char* get_dirname(DIR* dir, DIR* parent) {
     
 }
 
+commande* parcours_repertoire(commande *cmd, char* dir_to_open){
+    struct dirent *ent;
+    DIR *dir = opendir(dir_to_open);
+    if(!dir) return NULL;
+
+    struct string* path = string_new(100);
+
+    while(1){
+        ent = readdir(dir);
+        if(ent == NULL) break;
+
+        if(ent->d_name[0] == '.')
+            continue;
+
+        string_append(path, ent->d_name);
+        string_append(path, " ");
+    }
+
+    string_truncate(path, 1);
+    string_prepend(path, " ");
+    string_prepend(path, cmd->name);
+    commande* new_cmd = create_cmd(path->data);
+
+    return new_cmd;    
+}
+
 int cmd_pwd(commande *cmd) {
     char *dir;
     if (cmd -> nbParam == 0)

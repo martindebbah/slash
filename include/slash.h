@@ -19,4 +19,7 @@ int addVal(char *path, int val);
 // Découpe le path pour ne pas dépasser la limite de caractères
 char *cutPath(char *path, int max);
 
+// Traite le joker si il y en a un dans les parametres de cmd
+int joker_processing(commande *cmd);
+
 #endif

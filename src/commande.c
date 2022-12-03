@@ -34,7 +34,7 @@ parametres *create_param() {
     char *str = strtok(NULL, " ");
     if (!str)
         return NULL;
-        
+    
     parametres *p = malloc(sizeof(parametres));
     if (!p)
         goto error;

@@ -69,12 +69,15 @@ int cmd_pwd(commande *cmd) {
     if (cmd -> nbParam == 0)
         dir = pwd(1);
 
-    if (cmd -> nbParam == 1) {
+    if (cmd -> nbParam >= 1) {
         if(strcmp(getParamAt(cmd, 0), "-L") == 0)
             dir = pwd(1);
 
-        if(strcmp(getParamAt(cmd, 0), "-P") == 0)
+        else if(strcmp(getParamAt(cmd, 0), "-P") == 0)
             dir = pwd(0);
+
+        else 
+            dir = pwd(1);
     }
 
     if (!dir)

@@ -69,7 +69,7 @@ struct string* parcours_repertoire(char* dir_to_open){
     DIR *dir = opendir(dir_to_open);
     if(!dir) return NULL;
 
-    struct string* path = string_new(100);
+    struct string* path = string_new(500);
 
     while(1){
         ent = readdir(dir);
@@ -81,8 +81,6 @@ struct string* parcours_repertoire(char* dir_to_open){
         string_append(path, ent->d_name);
         string_append(path, " ");
     }
-
-    string_truncate(path, 1);
 
     closedir(dir);
     return path;    

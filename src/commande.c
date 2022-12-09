@@ -21,7 +21,8 @@ commande *create_cmd(char *line) {
     if (!cmd -> name)
         goto error;
 
-    cmd -> param = create_param();
+    line += strlen(str)+1;
+    cmd -> param = create_param(line);
     cmd -> nbParam = getNbParam(cmd -> param);
 
     return cmd;
@@ -32,11 +33,11 @@ commande *create_cmd(char *line) {
     return NULL;
 }
 
-parametres *create_param() {
+parametres *create_param(char *line) {
     char *str = strtok(NULL, " ");
     if (!str)
         return NULL;
-    
+    line += strlen(str)+1;
     parametres *p = malloc(sizeof(parametres));
     if (!p)
         goto error;
@@ -45,11 +46,9 @@ parametres *create_param() {
     if(strchr(str,'*') != NULL){
         if(is_joker_prefix(str)){
             struct string* path = parcours_repertoire(".");
-            str = strtok(NULL," ");
+            string_append(path, line);
+            str = strtok(path->data, " ");
             if(!str) return NULL;
-            string_append(path, str);
-            str = strtok(path->data," ");
-            printf("%s\n",str);
             free(path);
         }
     }
@@ -59,7 +58,7 @@ parametres *create_param() {
     if (!p -> str)
         goto error;
 
-    p -> suivant = create_param();
+    p -> suivant = create_param(line);
 
     return p;
 
@@ -89,7 +88,7 @@ int is_joker_prefix(char *str){
         }
         joker = strchr(joker,'*');
     }
-    free(joker);
+    //free(joker);
     return res;
 }
 

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
         if (hist)
             memcpy(hist, line, strlen(line));
 
-        // Découpage de la ligne de commande
+        // Découpage de la ligne de commande et gestion du joker
         commande *cmd = create_cmd(line);
         if (!cmd) {
             free(line);
@@ -58,23 +58,12 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = joker_processing(cmd);
+        val = executeCmd(cmd);
         delete_cmd(cmd);
     }
 
     clear_history();
     return 1;
-}
-
-int joker_processing(commande *cmd){
-    if(cmd->nbParam == 1){
-        if(strcmp(getParamAt(cmd,0),"*") == 0){
-            commande* new_cmd = parcours_repertoire(cmd, ".");
-            return executeCmd(new_cmd);
-        }
-        //char *str = strchr(getParamAt(cmd,0),'*');
-    }
-    return executeCmd(cmd);
 }
 
 int executeCmd(commande *cmd) {

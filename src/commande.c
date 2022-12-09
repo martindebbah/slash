@@ -1,7 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "mystring.h"
 #include "commande.h"
+#include "cmd.h"
 
 commande *create_cmd(char *line) {
     commande *cmd = malloc(sizeof(commande));
@@ -39,6 +41,19 @@ parametres *create_param() {
     if (!p)
         goto error;
 
+    // verifier le joker
+    if(strchr(str,'*') != NULL){
+        if(is_joker_prefix(str)){
+            struct string* path = parcours_repertoire(".");
+            str = strtok(NULL," ");
+            if(!str) return NULL;
+            string_append(path, str);
+            str = strtok(path->data," ");
+            printf("%s\n",str);
+            free(path);
+        }
+    }
+
     p -> str = calloc(strlen(str) + 1, 1);
     memcpy(p -> str, str, strlen(str));
     if (!p -> str)
@@ -52,6 +67,30 @@ parametres *create_param() {
         if (p)
             delete_param(p);
         return NULL;
+}
+
+int is_joker_prefix(char *str){
+    int res = 1;
+    char *joker = strchr(str,'*');
+    if(strlen(str) == 1) return res;
+    while(joker != NULL){
+        if(strcmp(joker,str) == 0){
+            joker++;
+            joker = strchr(joker,'*');
+            continue;
+        }
+        joker--;
+        if(joker[0] != '/'){
+            res = 0;
+            break;
+        }
+        else{
+            joker = joker + 2;
+        }
+        joker = strchr(joker,'*');
+    }
+    free(joker);
+    return res;
 }
 
 void delete_cmd(commande *cmd) {

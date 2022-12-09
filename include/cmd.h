@@ -23,6 +23,6 @@ char *update_path(char *path, char *up);
 void cmd_exit(int val);
 
 // parcours le repertoire dir_to_open et stock chaque nom dans les paramètres de cmd
-commande* parcours_repertoire(commande *cmd, char* dir_to_open);
+struct string* parcours_repertoire(char* dir_to_open);
 
 #endif

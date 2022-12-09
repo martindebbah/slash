@@ -64,7 +64,7 @@ static char* get_dirname(DIR* dir, DIR* parent) {
     
 }
 
-commande* parcours_repertoire(commande *cmd, char* dir_to_open){
+struct string* parcours_repertoire(char* dir_to_open){
     struct dirent *ent;
     DIR *dir = opendir(dir_to_open);
     if(!dir) return NULL;
@@ -83,11 +83,9 @@ commande* parcours_repertoire(commande *cmd, char* dir_to_open){
     }
 
     string_truncate(path, 1);
-    string_prepend(path, " ");
-    string_prepend(path, cmd->name);
-    commande* new_cmd = create_cmd(path->data);
 
-    return new_cmd;    
+    closedir(dir);
+    return path;    
 }
 
 int cmd_pwd(commande *cmd) {

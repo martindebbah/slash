@@ -41,4 +41,7 @@ char *getParam(parametres *p, int i);
 // Désaloue la mémoire prise par les paramètres.
 void delete_param(parametres *p);
 
+// Renvoie 1 si tous les jokers sont prefixes sinon 0
+int is_joker_prefix(char *str);
+
 #endif

@@ -3,6 +3,8 @@
 
 #include "commande.h"
 
+typedef struct string_list string_list;
+
 /*
 Affiche la (plus precisement, une) reference absolue du repertoire de travail courant avec les options -P et -L.
 La valeur de retour est 0 en cas de succes, 1 en cas d'echec.
@@ -23,6 +25,6 @@ char *update_path(char *path, char *up);
 void cmd_exit(int val);
 
 // parcours le repertoire dir_to_open et stock chaque nom dans les paramètres de cmd
-struct string* parcours_repertoire(char* dir_to_open);
+string_list* parcours_repertoire(char* dir_to_open, char* suf, char* word);
 
 #endif

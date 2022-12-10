@@ -11,7 +11,7 @@ commande *create_cmd(char *line) {
 
     if (!cmd || strlen(line) < 1)
         goto error;
-
+    
     char *str = strtok(line, sep);
     if (!str)
         goto error;
@@ -21,9 +21,12 @@ commande *create_cmd(char *line) {
     if (!cmd -> name)
         goto error;
 
-    line += strlen(str)+1;
-    cmd -> param = create_param(line);
+    // line += strlen(str)+1;
+    // char *l = calloc(strlen(line) + 1, 1);
+    // memcpy(l, line, strlen(line));
+    cmd -> param = create_param();
     cmd -> nbParam = getNbParam(cmd -> param);
+    // free(l);
 
     return cmd;
 
@@ -33,32 +36,87 @@ commande *create_cmd(char *line) {
     return NULL;
 }
 
-parametres *create_param(char *line) {
+parametres *create_param() {
     char *str = strtok(NULL, " ");
     if (!str)
         return NULL;
-    line += strlen(str)+1;
-    parametres *p = malloc(sizeof(parametres));
-    if (!p)
-        goto error;
 
     // verifier le joker
     if(strchr(str,'*') != NULL){
         if(is_joker_prefix(str)){
-            struct string* path = parcours_repertoire(".");
-            string_append(path, line);
-            str = strtok(path->data, " ");
-            if(!str) return NULL;
-            free(path);
+            struct string *dir_to_open = string_new(strlen(str)+1);
+            string_append(dir_to_open, str);
+            string_truncate(dir_to_open, strlen(strchr(str,'*')));
+            if(dir_to_open->length == 0) string_append(dir_to_open, ".");
+
+            char *suf = calloc(strlen(strchr(str,'*'))+1, 1);
+            memcpy(suf, strchr(str,'*'), strlen(strchr(str,'*')));
+            if(!suf)
+                return NULL;
+            suf++;
+
+            string_list* path;
+            if(suf[0] == '/'){
+                suf++;
+                path = parcours_repertoire(dir_to_open->data, suf, NULL);
+            }
+            else if(suf[0] == '\0'){
+                path = parcours_repertoire(dir_to_open->data, NULL, NULL);
+            }
+            else {
+                struct string *word_to_compare = string_new(strlen(suf)+1);
+                string_append(word_to_compare, suf);
+                string_truncate_where(word_to_compare, '/');
+                if(strlen(suf) > word_to_compare->length) suf += word_to_compare->length+1;
+                else suf += word_to_compare->length;
+                
+                if(strlen(suf) == 0) suf = NULL;
+
+                path = parcours_repertoire(dir_to_open->data, suf, word_to_compare->data);
+
+                string_delete(word_to_compare);
+            }
+
+            parametres *p = create_param_list(path);
+            list_delete(path);
+            string_delete(dir_to_open);
+            return p;
         }
     }
+
+    parametres *p = malloc(sizeof(parametres));
+    if (!p)
+        goto error;
 
     p -> str = calloc(strlen(str) + 1, 1);
     memcpy(p -> str, str, strlen(str));
     if (!p -> str)
         goto error;
 
-    p -> suivant = create_param(line);
+    p -> suivant = create_param();
+
+    return p;
+
+    error:
+        if (p)
+            delete_param(p);
+        return NULL;
+}
+
+parametres *create_param_list(string_list *l) {
+    if (!l || !l -> s)
+        return create_param();
+
+    parametres *p = malloc(sizeof(parametres));
+    if (!p)
+        goto error;
+
+    p -> str = calloc(strlen(l -> s) + 1, 1);
+    memcpy(p -> str, l -> s, strlen(l -> s));
+    if (!p -> str)
+        goto error;
+
+    p -> suivant = create_param_list(l -> suivant);
 
     return p;
 

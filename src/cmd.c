@@ -13,6 +13,7 @@
 #include "cmd.h"
 #include "mystring.h"
 #include "commande.h"
+#include "string_list.h"
 
 /*
     Renvoie si le repertoire dir est la racine
@@ -64,12 +65,16 @@ static char* get_dirname(DIR* dir, DIR* parent) {
     
 }
 
-struct string* parcours_repertoire(char* dir_to_open){
+string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
+    // Prendre suffixe en paramètres (avant le /)
+    // et aussi la suite de la ligne après char pour vérifier si contient un autre *
     struct dirent *ent;
     DIR *dir = opendir(dir_to_open);
     if(!dir) return NULL;
 
-    struct string* path = string_new(500);
+    struct string *prefixe = string_new(strlen(dir_to_open)+30);
+    if(strcmp(dir_to_open, ".") != 0) string_append(prefixe, dir_to_open);
+    string_list* param = list_create();
 
     while(1){
         ent = readdir(dir);
@@ -78,12 +83,73 @@ struct string* parcours_repertoire(char* dir_to_open){
         if(ent->d_name[0] == '.')
             continue;
 
-        string_append(path, ent->d_name);
-        string_append(path, " ");
+        // le repertoire avant ent->d_name
+        string_append(prefixe, ent->d_name);
+        
+        // Vérification que *suf existe
+        // si oui :
+        if(suf != NULL){
+            // Si Une autre étoile dans la ligne :
+            if(strchr(suf, '*') != NULL){
+                // string_cat(param, parcours_repertoire(nouvelle étoile))
+                // Une fonction pour concaténer deux string list a/*/b/*
+                list_append(param, prefixe->data);
+            // Sinon
+            } else {
+                // Si suite du chemin valide   
+                string_append(prefixe, "/");
+                string_append(prefixe, suf);
+
+                int fd = open(prefixe->data, O_RDONLY);
+                if(fd >= 0){
+                    if(word != NULL){
+
+                        char *tmp = ent->d_name;
+                        while(tmp[0] != '\0'){
+                            if(strcmp(tmp, word) == 0){
+                                list_append(param, prefixe->data);
+                                break;
+                            }
+                            tmp++;
+                        }
+
+                    }
+                    else {
+                        list_append(param, prefixe->data);
+                    }
+                    close(fd);
+                }
+                string_truncate(prefixe, strlen(suf)+1);
+            }
+        // Sinon on ajoute pas
+        } else{
+            if(word != NULL){
+
+                char *tmp = ent->d_name;
+                while(tmp[0] != '\0'){
+                    if(strcmp(tmp, word) == 0){
+                        list_append(param, prefixe->data);
+                        break;
+                    }
+                    tmp++;
+                }
+
+            }
+            else list_append(param, prefixe->data);
+        }
+
+        string_truncate(prefixe, strlen(ent->d_name));
     }
 
+    if(param->s == NULL){
+        string_append(prefixe, "/");
+        string_append(prefixe, suf);
+        list_append(param, prefixe->data);
+    }
+
+    string_delete(prefixe);
     closedir(dir);
-    return path;    
+    return param;    
 }
 
 int cmd_pwd(commande *cmd) {

@@ -21,6 +21,10 @@ void string_truncate (struct string * str, size_t nchars);
 // Tronque la chaîne en enlevant les nchars derniers caractères
 // (ou tous les caractères s'il y en a moins de nchars).
 
+void string_truncate_where (struct string * str, char delimit);
+// Tronque la chaîne en enlevant les nchars depuis le delimit
+// (ou tous les caractères s'il y en a moins de nchars).
+
 // Ajoute SRC à la fin de DEST
 int string_append (struct string * dest, char * src);
 

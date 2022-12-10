@@ -96,8 +96,8 @@ int executeCmd(commande *cmd) {
 
         if (pid == 0) { // Child
             char **p = paramToTab(cmd);
-
             execvp(cmd -> name, p);
+            exit(1);
             
         }else { // Parent
             int status;

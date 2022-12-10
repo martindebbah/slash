@@ -1,6 +1,8 @@
 #ifndef COMMANDE
 #define COMMANDE
 
+#include "string_list.h"
+
 typedef struct commande commande;
 typedef struct parametres parametres;
 
@@ -24,6 +26,8 @@ void delete_cmd(commande *cmd);
 
 // Crée une liste de paramètres
 parametres *create_param();
+
+parametres *create_param_list(string_list *s);
 
 // Retourne le nombre de paramètres
 int getNbParam(parametres *p);

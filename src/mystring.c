@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "mystring.h"
 
@@ -46,9 +47,19 @@ int string_prepend(struct string * dest, char * src){
 
 
 void string_truncate (struct string * str, size_t nchars) {
+  if(nchars < 0) return;
   if (nchars > str->length) { nchars = str->length; }
   str->data[str->length-nchars] = 0;
   str->length -= nchars;
+}
+
+void string_truncate_where(struct string * str, char delimit) {
+  char *tmp = str->data;
+  if(strchr(tmp, delimit) == NULL) return;
+  while(tmp[0] != delimit){
+      tmp++;
+  }
+  string_truncate(str, strlen(tmp));
 }
 
 char *copy(struct string *path) {

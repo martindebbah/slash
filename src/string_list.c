@@ -36,3 +36,17 @@ void list_delete(string_list *l) {
     list_delete(l -> suivant);
     free(l);
 }
+
+string_list* list_cat(string_list* l1, string_list* l2){
+    if(!l1 || !l1->s)
+        return l2;
+    if(!l2 || !l2->s)
+        return l1;
+    string_list* l = l1;
+    while(l->suivant != NULL){
+        l = l->suivant;
+    }
+    l->suivant = l2;
+    
+    return l1;
+}

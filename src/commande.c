@@ -77,10 +77,15 @@ parametres *create_param() {
                 string_delete(word_to_compare);
             }
 
-            parametres *p = create_param_list(path);
+            if(path->s != NULL){
+                parametres *p = create_param_list(path);
+
+                list_delete(path);
+                string_delete(dir_to_open);
+                return p;
+            }
             list_delete(path);
             string_delete(dir_to_open);
-            return p;
         }
     }
 

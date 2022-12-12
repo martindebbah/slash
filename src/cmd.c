@@ -84,6 +84,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
             continue;
 
         // le repertoire avant ent->d_name
+        if((prefixe->length > 0 && prefixe->data[prefixe->length-1] != '/') && strcmp(dir_to_open,".") != 0) string_append(prefixe, "/");
         string_append(prefixe, ent->d_name);
         
         // Vérification que *suf existe
@@ -93,7 +94,49 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
             if(strchr(suf, '*') != NULL){
                 // string_cat(param, parcours_repertoire(nouvelle étoile))
                 // Une fonction pour concaténer deux string list a/*/b/*
-                list_append(param, prefixe->data);
+                if(is_joker_prefix(suf)){
+                    char *c = calloc(strlen(strchr(suf,'*'))+1, 1);
+                    memcpy(c, strchr(suf,'*'), strlen(strchr(suf,'*')));
+                    if(!c)
+                        return NULL;
+                    c++;
+
+                    char *new_word = NULL;
+                    struct string *word_to_compare;
+
+                    if(strlen(c) == 0) c = NULL;
+                    else if(c[0] != '/'){
+                        word_to_compare = string_new(strlen(c)+1);
+                        string_append(word_to_compare, c);
+                        string_truncate_where(word_to_compare, '/');
+                        if(strlen(c) > word_to_compare->length) c += word_to_compare->length+1;
+                        else c += word_to_compare->length;
+                        
+                        if(strlen(c) == 0) c = NULL;
+                        new_word = copy(word_to_compare);
+                    }
+                    else c++;
+                    
+                    if(opendir(prefixe->data) != NULL){
+
+                        if(word != NULL){
+
+                            char *tmp = ent->d_name;
+                            while(tmp[0] != '\0'){
+                                if(strcmp(tmp, word) == 0){
+                                    param = list_cat(param, parcours_repertoire(prefixe->data, c, new_word));
+                                    break;
+                                }
+                                tmp++;
+                            }
+
+                        }
+                        else{
+                            param = list_cat(param, parcours_repertoire(prefixe->data, c, new_word));
+                        }
+                    }
+                    free(new_word);
+                }
             // Sinon
             } else {
                 // Si suite du chemin valide   
@@ -135,16 +178,13 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
                 }
 
             }
-            else list_append(param, prefixe->data);
+            else{
+                list_append(param, prefixe->data);
+            }
         }
 
         string_truncate(prefixe, strlen(ent->d_name));
-    }
-
-    if(param->s == NULL){
-        string_append(prefixe, "/");
-        string_append(prefixe, suf);
-        list_append(param, prefixe->data);
+        if(strcmp(dir_to_open, ".") != 0) string_truncate(prefixe, 1);
     }
 
     string_delete(prefixe);

@@ -94,8 +94,6 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
         if(suf != NULL){
             // Si Une autre étoile dans la ligne :
             if(strchr(suf, '*') != NULL){
-                // string_cat(param, parcours_repertoire(nouvelle étoile))
-                // Une fonction pour concaténer deux string list a/*/b/*
                 if(is_joker_prefix(suf)){
                     struct string *no_joker = string_new(strlen(suf)+1);
                     string_append(no_joker, suf);
@@ -209,7 +207,6 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
             }
         }
 
-        //printf("prefixe : %s\n", prefixe->data);
         string_truncate(prefixe, strlen(ent->d_name));
         if(strcmp(dir_to_open, ".") != 0) string_truncate(prefixe, 1);
     }

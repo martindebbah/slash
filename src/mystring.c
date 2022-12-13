@@ -4,8 +4,6 @@
 
 #include "mystring.h"
 
-// TODO: implémenter les fonctions déclarées dans mystring.h
-
 struct string * string_new(size_t capacity) {
   if (capacity == 0) return NULL;
   char* data = malloc(capacity);
@@ -75,7 +73,6 @@ struct string *clean(struct string *path) {
     while(tmp[0] != '\0') {
       if(tmp[0] == '/' && tmp[1] == '/'){
         memmove(tmp, tmp+1, strlen(tmp));
-        //printf("%s\n", tmp);
       }
       else tmp++;
     }

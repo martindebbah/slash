@@ -37,12 +37,8 @@ commande *create_cmd(char *line) {
     if (!cmd -> name)
         goto error;
 
-    // line += strlen(str)+1;
-    // char *l = calloc(strlen(line) + 1, 1);
-    // memcpy(l, line, strlen(line));
     cmd -> param = create_param();
     cmd -> nbParam = getNbParam(cmd -> param);
-    // free(l);
 
     return cmd;
 

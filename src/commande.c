@@ -16,8 +16,24 @@ commande *create_cmd(char *line) {
     if (!str)
         goto error;
     
-    cmd -> name = calloc(strlen(str) + 1, 1);
-    memcpy(cmd -> name, str, strlen(str));
+    if(strchr(str,'*') != NULL && is_joker_prefix(str)){
+
+        string_list *path = process_joker(str);
+        
+        if(path && path -> s && !path -> suivant){
+            cmd -> name = calloc(strlen(path->s)+1, 1);
+            memcpy(cmd -> name, path -> s, strlen(path -> s));
+        }
+        else {
+            cmd -> name = calloc(strlen(str)+1, 1);
+            memcpy(cmd -> name, str, strlen(str));
+        }
+        list_delete(path);
+    }else {
+        cmd -> name = calloc(strlen(str)+1, 1);
+        memcpy(cmd -> name, str, strlen(str));
+    }
+    
     if (!cmd -> name)
         goto error;
 
@@ -42,51 +58,16 @@ parametres *create_param() {
         return NULL;
 
     // verifier le joker
-    if(strchr(str,'*') != NULL){
-        if(is_joker_prefix(str)){
-            struct string *dir_to_open = string_new(strlen(str)+1);
-            string_append(dir_to_open, str);
-            string_truncate(dir_to_open, strlen(strchr(str,'*')));
-            if(dir_to_open->length == 0) string_append(dir_to_open, ".");
+    if(strchr(str,'*') != NULL && is_joker_prefix(str)){
+        string_list *path = process_joker(str);
+            
+        if(path && path->s != NULL){
+            parametres *p = create_param_list(path);
 
-            char *suf = calloc(strlen(strchr(str,'*'))+1, 1);
-            memcpy(suf, strchr(str,'*'), strlen(strchr(str,'*')));
-            if(!suf)
-                return NULL;
-            suf++;
-
-            string_list* path;
-            if(suf[0] == '/'){
-                suf++;
-                path = parcours_repertoire(dir_to_open->data, suf, NULL);
-            }
-            else if(suf[0] == '\0'){
-                path = parcours_repertoire(dir_to_open->data, NULL, NULL);
-            }
-            else {
-                struct string *word_to_compare = string_new(strlen(suf)+1);
-                string_append(word_to_compare, suf);
-                string_truncate_where(word_to_compare, '/');
-                if(strlen(suf) > word_to_compare->length) suf += word_to_compare->length+1;
-                else suf += word_to_compare->length;
-                
-                if(strlen(suf) == 0) suf = NULL;
-
-                path = parcours_repertoire(dir_to_open->data, suf, word_to_compare->data);
-
-                string_delete(word_to_compare);
-            }
-
-            if(path->s != NULL){
-                parametres *p = create_param_list(path);
-
-                list_delete(path);
-                string_delete(dir_to_open);
-                return p;
-            }
             list_delete(path);
-            string_delete(dir_to_open);
+            return p;
         }
+        list_delete(path);
     }
 
     parametres *p = malloc(sizeof(parametres));
@@ -151,8 +132,47 @@ int is_joker_prefix(char *str){
         }
         joker = strchr(joker,'*');
     }
-    //free(joker);
     return res;
+}
+
+string_list *process_joker(char *str){
+    struct string *dir_to_open = string_new(strlen(str)+1);
+    string_append(dir_to_open, str);
+    string_truncate(dir_to_open, strlen(strchr(str,'*')));
+    if(dir_to_open->length == 0) string_append(dir_to_open, "");
+
+    char *suf = calloc(strlen(strchr(str,'*'))+1, 1);
+    memcpy(suf, strchr(str,'*'), strlen(strchr(str,'*')));
+    if(!suf)
+        return NULL;
+    int i = 1;
+
+    string_list* path;
+    if(suf[i] == '/'){
+        i++;
+        path = parcours_repertoire(dir_to_open->data, &suf[i], NULL);
+    }
+    else if(suf[i] == '\0'){
+        path = parcours_repertoire(dir_to_open->data, NULL, NULL);
+    }
+    else {
+        struct string *word_to_compare = string_new(strlen(suf + i)+1);
+        string_append(word_to_compare, &suf[i]);
+        string_truncate_where(word_to_compare, '/');
+        if(strlen(suf + i) > word_to_compare->length) i += word_to_compare->length+1;
+        else i += word_to_compare->length;
+        
+        if(strlen(suf + i) == 0){
+            path = parcours_repertoire(dir_to_open->data, NULL, word_to_compare->data);
+        }else {
+            path = parcours_repertoire(dir_to_open->data, &suf[i], word_to_compare->data);
+        }
+        string_delete(word_to_compare);
+    }
+
+    free(suf);
+    string_delete(dir_to_open);
+    return path;
 }
 
 void delete_cmd(commande *cmd) {
@@ -181,6 +201,13 @@ char **paramToTab(commande *cmd) {
     }
     p[n + 1] = NULL;
     return p;
+}
+
+void delete_tab(char **tab) {
+    int i = 0;
+    while (tab[i] != NULL)
+        free(tab[i++]);
+    free(tab);
 }
 
 char *getParamAt(commande *cmd, int i) {

@@ -29,6 +29,9 @@ parametres *create_param();
 
 parametres *create_param_list(string_list *s);
 
+// Evalue la chaîne de caractère en résolvant les étoiles
+string_list *process_joker(char *str);
+
 // Retourne le nombre de paramètres
 int getNbParam(parametres *p);
 
@@ -44,6 +47,9 @@ char *getParam(parametres *p, int i);
 
 // Désaloue la mémoire prise par les paramètres.
 void delete_param(parametres *p);
+
+// Désalloue la mémoire de tab
+void delete_tab(char **tab);
 
 // Renvoie 1 si tous les jokers sont prefixes sinon 0
 int is_joker_prefix(char *str);

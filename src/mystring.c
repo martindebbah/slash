@@ -69,3 +69,15 @@ char *copy(struct string *path) {
   string_delete(path);
   return ret;
 }
+
+struct string *clean(struct string *path) {
+    char *tmp = path -> data;
+    while(tmp[0] != '\0') {
+      if(tmp[0] == '/' && tmp[1] == '/'){
+        memmove(tmp, tmp+1, strlen(tmp));
+        //printf("%s\n", tmp);
+      }
+      else tmp++;
+    }
+    return path;
+}

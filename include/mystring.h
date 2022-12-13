@@ -34,5 +34,7 @@ int string_prepend(struct string * dest, char * src);
 // Copie et supprime le string
 // il faut free après utilisation
 char *copy(struct string *path);
+
+struct string *clean(struct string *path);
   
 #endif // MYSTRING_H

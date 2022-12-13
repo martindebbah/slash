@@ -93,9 +93,9 @@ int executeCmd(commande *cmd) {
 
     }else { // Pas une commande interne
         pid_t pid = fork();
+        char **p = paramToTab(cmd);
 
         if (pid == 0) { // Child
-            char **p = paramToTab(cmd);
             execvp(cmd -> name, p);
             exit(1);
             
@@ -104,6 +104,7 @@ int executeCmd(commande *cmd) {
             waitpid(pid, &status, 0);
             val = WEXITSTATUS(status);
         }
+        delete_tab(p);
     }
 
     return val;

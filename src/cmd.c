@@ -69,11 +69,13 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
     // Prendre suffixe en paramètres (avant le /)
     // et aussi la suite de la ligne après char pour vérifier si contient un autre *
     struct dirent *ent;
-    DIR *dir = opendir(dir_to_open);
+    DIR *dir;
+    if(strcmp(dir_to_open, "") != 0) dir = opendir(dir_to_open);
+    else dir = opendir(".");
     if(!dir) return NULL;
 
     struct string *prefixe = string_new(strlen(dir_to_open)+30);
-    if(strcmp(dir_to_open, ".") != 0) string_append(prefixe, dir_to_open);
+    if(strcmp(dir_to_open, "") != 0) string_append(prefixe, dir_to_open);
     string_list* param = list_create();
 
     while(1){
@@ -84,7 +86,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
             continue;
 
         // le repertoire avant ent->d_name
-        if((prefixe->length > 0 && prefixe->data[prefixe->length-1] != '/') && strcmp(dir_to_open,".") != 0) string_append(prefixe, "/");
+        if((prefixe->length > 0 && prefixe->data[prefixe->length-1] != '/') && strcmp(dir_to_open,"") != 0) string_append(prefixe, "/");
         string_append(prefixe, ent->d_name);
         
         // Vérification que *suf existe
@@ -95,36 +97,52 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
                 // string_cat(param, parcours_repertoire(nouvelle étoile))
                 // Une fonction pour concaténer deux string list a/*/b/*
                 if(is_joker_prefix(suf)){
+                    struct string *no_joker = string_new(strlen(suf)+1);
+                    string_append(no_joker, suf);
+
                     char *c = calloc(strlen(strchr(suf,'*'))+1, 1);
                     memcpy(c, strchr(suf,'*'), strlen(strchr(suf,'*')));
                     if(!c)
                         return NULL;
-                    c++;
+
+                    string_truncate(no_joker, strlen(c));
+                    no_joker = clean(no_joker);
+                    string_append(prefixe, "/");
+                    if(strcmp(no_joker->data, "/") != 0) string_append(prefixe, no_joker->data);
+
+                    int i = 1;
 
                     char *new_word = NULL;
                     struct string *word_to_compare;
 
-                    if(strlen(c) == 0) c = NULL;
-                    else if(c[0] != '/'){
-                        word_to_compare = string_new(strlen(c)+1);
-                        string_append(word_to_compare, c);
-                        string_truncate_where(word_to_compare, '/');
-                        if(strlen(c) > word_to_compare->length) c += word_to_compare->length+1;
-                        else c += word_to_compare->length;
-                        
-                        if(strlen(c) == 0) c = NULL;
-                        new_word = copy(word_to_compare);
+                    if(c[i] && c[i] != '\0'){
+                        if(c[i] != '/'){
+                            word_to_compare = string_new(strlen(c + i)+1);
+                            string_append(word_to_compare, c + i);
+                            string_truncate_where(word_to_compare, '/');
+                            if(strlen(c + i) > word_to_compare->length) i += word_to_compare->length+1;
+                            else i += word_to_compare->length;
+                            
+                            new_word = copy(word_to_compare);
+                        }
+                        else {
+                            i++;
+                        }
                     }
-                    else c++;
                     
-                    if(opendir(prefixe->data) != NULL){
+                    DIR *verif = opendir(prefixe->data);
+                    if(verif != NULL){
 
                         if(word != NULL){
 
                             char *tmp = ent->d_name;
                             while(tmp[0] != '\0'){
                                 if(strcmp(tmp, word) == 0){
-                                    param = list_cat(param, parcours_repertoire(prefixe->data, c, new_word));
+                                    if(strlen(c + i) > 0) {
+                                        param = list_cat(param, parcours_repertoire(prefixe->data, &c[i], new_word));
+                                    }else {
+                                        param = list_cat(param, parcours_repertoire(prefixe->data, NULL, new_word));
+                                    }
                                     break;
                                 }
                                 tmp++;
@@ -132,9 +150,17 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
 
                         }
                         else{
-                            param = list_cat(param, parcours_repertoire(prefixe->data, c, new_word));
+                            if(strlen(c + i) > 0) {
+                                param = list_cat(param, parcours_repertoire(prefixe->data, &c[i], new_word));
+                            }else {
+                                param = list_cat(param, parcours_repertoire(prefixe->data, NULL, new_word));
+                            }
                         }
+                        closedir(verif);
                     }
+                    string_truncate(prefixe, no_joker->length+1);
+                    string_delete(no_joker);
+                    free(c);
                     free(new_word);
                 }
             // Sinon
@@ -183,13 +209,14 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
             }
         }
 
+        //printf("prefixe : %s\n", prefixe->data);
         string_truncate(prefixe, strlen(ent->d_name));
         if(strcmp(dir_to_open, ".") != 0) string_truncate(prefixe, 1);
     }
 
     string_delete(prefixe);
     closedir(dir);
-    return param;    
+    return param;   
 }
 
 int cmd_pwd(commande *cmd) {

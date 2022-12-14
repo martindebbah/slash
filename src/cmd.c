@@ -103,10 +103,11 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
                     if(!c)
                         return NULL;
 
-                    string_truncate(no_joker, strlen(c));
+                    string_truncate(no_joker, strlen(c)+1);
                     no_joker = clean(no_joker);
                     string_append(prefixe, "/");
-                    if(strcmp(no_joker->data, "/") != 0) string_append(prefixe, no_joker->data);
+                    string_append(prefixe, no_joker->data);
+                    prefixe = clean(prefixe);
 
                     int i = 1;
 

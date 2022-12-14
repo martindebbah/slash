@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
     rl_outstream = stderr;
 
     char *oldpwd = pwd(1);
-    setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour éviter une qeg fault
+    setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour éviter une seg fault
     free(oldpwd);                             // lors du premier appel à cd.
     
     while (1) {
@@ -211,25 +211,4 @@ char *cutPath(char *path, int max) {
         memcpy(p + 3, path + strlen(path) - max + 3, max - 3);
     }
     return p;
-
-    // max -= 3; // Pour "..." au début
-    // if (strlen(path) <= max)
-    //     return path;
-        
-    // int d = strlen(path); // On commence avec une balise sur le dernier caractère
-    // int i = d;
-    // while (strlen(path) - i < max) { // On lit les caractères de la fin vers le début
-    //     if (path[i] == '/') {
-    //         d = i; // On balise dès qu'on trouve un '/'
-    //     }
-    //     i--;
-    // }
-
-    // // On ajoute "..."
-    // path[--d] = '.';
-    // path[--d] = '.';
-    // path[--d] = '.';
-
-    // // On retourne ".../**", en ne coupant pas de nom de répertoire
-    // return path + d;
 }

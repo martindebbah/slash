@@ -166,6 +166,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
                 // Si suite du chemin valide   
                 string_append(prefixe, "/");
                 string_append(prefixe, suf);
+                prefixe = clean(prefixe);
 
                 int fd = open(prefixe->data, O_RDONLY);
                 if(fd >= 0){

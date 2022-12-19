@@ -19,6 +19,12 @@ static int val = 0; // La valeur de retour des commandes
 int main(int argc, char **argv) {
     rl_outstream = stderr;
 
+    // Ignorer SIGINT + SIGTERM
+    struct sigaction action;
+    action.__sigaction_u.__sa_handler = SIG_IGN;
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+
     char *oldpwd = pwd(1);
     setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour éviter une seg fault
     free(oldpwd);                             // lors du premier appel à cd.
@@ -33,6 +39,7 @@ int main(int argc, char **argv) {
         if (!line || strlen(line) == 0 || strlen(line) > MAX_ARGS_STRLEN) {        
             if (line == NULL) { // Si la ligne est NULL (EOF ou Ctrl-D)
                 free(line);
+                printf("\n");
                 cmd_exit(val); // On quitte le programme
             }else // Si la ligne est vide ou trop longue, on attend la prochaine commande
                 continue;
@@ -96,13 +103,24 @@ int executeCmd(commande *cmd) {
         char **p = paramToTab(cmd);
 
         if (pid == 0) { // Child
+            // Prise en compte des signaux
+            struct sigaction action;
+            action.__sigaction_u.__sa_handler = SIG_DFL;
+            sigaction(SIGINT, &action, NULL);
+            sigaction(SIGTERM, &action, NULL);
+
             execvp(cmd -> name, p);
             exit(1);
             
         }else { // Parent
             int status;
             waitpid(pid, &status, 0);
-            val = WEXITSTATUS(status);
+
+            if (WIFSIGNALED(status)) { // Si processus arr^té par un signal
+                val = 255;
+                printf("\n");
+            }else // Sinon la valeur de retour du processus fils
+                val = WEXITSTATUS(status);
         }
         delete_tab(p);
     }

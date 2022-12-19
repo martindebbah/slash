@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 
     // Ignorer SIGINT + SIGTERM
     struct sigaction action;
-    action.__sigaction_u.__sa_handler = SIG_IGN;
+    action.sa_handler = SIG_IGN;
     sigaction(SIGINT, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
 
@@ -105,13 +105,12 @@ int executeCmd(commande *cmd) {
         if (pid == 0) { // Child
             // Prise en compte des signaux
             struct sigaction action;
-            action.__sigaction_u.__sa_handler = SIG_DFL;
+            action.sa_handler = SIG_DFL;
             sigaction(SIGINT, &action, NULL);
             sigaction(SIGTERM, &action, NULL);
 
             execvp(cmd -> name, p);
             exit(1);
-            
         }else { // Parent
             int status;
             waitpid(pid, &status, 0);

@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
     rl_outstream = stderr;
 
     // Ignorer SIGINT + SIGTERM
-    struct sigaction action;
+    struct sigaction action = {0};
     action.sa_handler = SIG_IGN;
     sigaction(SIGINT, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
             memcpy(hist, line, strlen(line));
 
         // Découpage de la ligne de commande et gestion du joker
-        commande *cmd = create_cmd(line);
+        commande *cmd = create_cmd(line); // Remplacer par struct redir ?
         if (!cmd) {
             free(line);
             free(hist);
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = executeCmd(cmd);
+        val = executeCmd(cmd); // Remplacer par executeRedir() ?
         delete_cmd(cmd);
     }
 
@@ -104,7 +104,7 @@ int executeCmd(commande *cmd) {
 
         if (pid == 0) { // Child
             // Prise en compte des signaux
-            struct sigaction action;
+            struct sigaction action = {0};
             action.sa_handler = SIG_DFL;
             sigaction(SIGINT, &action, NULL);
             sigaction(SIGTERM, &action, NULL);
@@ -115,7 +115,7 @@ int executeCmd(commande *cmd) {
             int status;
             waitpid(pid, &status, 0);
 
-            if (WIFSIGNALED(status)) { // Si processus arr^té par un signal
+            if (WIFSIGNALED(status)) { // Si processus arrêté par un signal
                 val = 255;
                 printf("\n");
             }else // Sinon la valeur de retour du processus fils

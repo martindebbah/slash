@@ -9,6 +9,7 @@
 #include <signal.h>
 #include "cmd.h"
 #include "commande.h"
+#include "redirection.h"
 #include "slash.h"
 
 #define MAX_ARGS_NUMBER 4096
@@ -50,9 +51,9 @@ int main(int argc, char **argv) {
         if (hist)
             memcpy(hist, line, strlen(line));
 
-        // Découpage de la ligne de commande et gestion du joker
-        commande *cmd = create_cmd(line); // Remplacer par struct redir ?
-        if (!cmd) {
+        // Découpage de la ligne de commande + gestion des jokers et redirections
+        redirection *redir = create_redir(line);
+        if (!redir) {
             free(line);
             free(hist);
             val = 127;
@@ -65,8 +66,8 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = executeCmd(cmd); // Remplacer par executeRedir() ?
-        delete_cmd(cmd);
+        val = executeCmd(redir -> cmd); // Remplacer par executeRedir()
+        delete_redir(redir);
     }
 
     clear_history();
@@ -110,7 +111,7 @@ int executeCmd(commande *cmd) {
             sigaction(SIGTERM, &action, NULL);
 
             execvp(cmd -> name, p);
-            exit(1);
+            exit(127);
         }else { // Parent
             int status;
             waitpid(pid, &status, 0);

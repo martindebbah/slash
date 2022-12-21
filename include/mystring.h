@@ -21,9 +21,11 @@ void string_truncate (struct string * str, size_t nchars);
 // Tronque la chaîne en enlevant les nchars derniers caractères
 // (ou tous les caractères s'il y en a moins de nchars).
 
+// Enlève les n premiers caractères avec les espaces
+struct string *string_truncate_token_and_spaces(struct string *str, size_t nchars);
+
 void string_truncate_where (struct string * str, char delimit);
-// Tronque la chaîne en enlevant les nchars depuis le delimit
-// (ou tous les caractères s'il y en a moins de nchars).
+// Tronque la chaîne après delimit
 
 // Ajoute SRC à la fin de DEST
 int string_append (struct string * dest, char * src);

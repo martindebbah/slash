@@ -45,10 +45,35 @@ int string_prepend(struct string * dest, char * src){
 
 
 void string_truncate (struct string * str, size_t nchars) {
-  if(nchars < 0) return;
-  if (nchars > str->length) { nchars = str->length; }
+  if(nchars < 0)
+    return;
+
+  if (nchars > str->length)
+    nchars = str->length;
   str->data[str->length-nchars] = 0;
   str->length -= nchars;
+}
+
+struct string *string_truncate_token_and_spaces(struct string *str, size_t nchars) {
+  if (nchars < 0)
+    return str;
+
+  if (nchars > str -> length)
+    nchars = str -> length;
+
+  struct string *newStr = string_new(str -> capacity);
+  string_append(newStr, str -> data + nchars);
+  string_delete(str);
+
+  int i = 0;
+  while (newStr -> data[i] == ' ')
+    i++;
+  if (i == 0)
+    return newStr;
+  struct string *finalStr = string_new(newStr -> capacity);
+  string_append(finalStr, newStr -> data + i);
+  string_delete(newStr);
+  return finalStr;
 }
 
 void string_truncate_where(struct string * str, char delimit) {

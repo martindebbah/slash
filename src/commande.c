@@ -7,12 +7,11 @@
 
 commande *create_cmd(char *line) {
     commande *cmd = malloc(sizeof(commande));
-    const char *sep = " ";
 
     if (!cmd || strlen(line) < 1)
         goto error;
     
-    char *str = strtok(line, sep);
+    char *str = strtok(line, " ");
     if (!str)
         goto error;
     

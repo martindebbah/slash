@@ -3,6 +3,7 @@
 #include "redirection.h"
 #include "mystring.h"
 
+// Si str est un token de redirection
 int isTokRed(char *str) {
     return strcmp(str, "<") == 0 
         || strcmp(str, ">") == 0
@@ -14,6 +15,7 @@ int isTokRed(char *str) {
         || strcmp(str, "|") == 0;
 }
 
+// Si str est un token de redirection de type pipeline
 int isTokPipe(char *str) {
     return strcmp(str, "|") == 0;
 }
@@ -21,48 +23,58 @@ int isTokPipe(char *str) {
 redirection *create_redir(char *line) {
     redirection *redir = malloc(sizeof(redirection));
 
-    // création des mystring
-    struct string *s = string_new(strlen(line) + 1);
-    struct string *nextCmd = string_new(strlen(line) + 1);
+    // Initialisation de toutes les valeurs à NULL
+    redir -> cmd = NULL;
+    redir -> type = NULL;
+    redir -> fic = NULL;
+    redir -> suivante = NULL;
+
+    // Création des string
+    struct string *s = string_new(strlen(line) + 1); // La commande avant la possible redirection
+    struct string *nextCmd = string_new(strlen(line) + 1); // La(les) commande(s) après la possible pipeline
     string_append(nextCmd, line);
+    
     char *str = strtok(line, " ");
 
     if (!redir || !s || !nextCmd || strlen(line) < 1)
         goto error;
 
+    // Boucle sur tokens délimités par des espaces
     do {
         nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-        if (isTokRed(str)) { // si token de redirection
+
+        if (isTokRed(str)) { // Si token de redirection
             redir -> type = calloc(strlen(str) + 1, 1);
             memcpy(redir -> type, str, strlen(str));
             if (!redir -> type)
                 goto error;
 
-            if (isTokPipe(str)) { // si redir == |
-                redir -> fic = NULL;
-
+            if (isTokPipe(str)) { // Si la redirection est une pipeline
                 char *c = copy(nextCmd);
+                nextCmd = NULL; // Pour éviter le double free lors d'un `goto error`
                 redir -> suivante = create_redir(c);
                 free(c);
                 if (!redir -> suivante)
                     goto error;
 
-            }else { // si redir != |
+            }else { // Si la redirection est autre qu'une pipeline
                 str = strtok(NULL, " ");
-                if (str == NULL) // Condition vraie !!
+                if (str == NULL)
                     goto error;
                 
                 redir -> fic = calloc(strlen(str) + 1, 1);
                 memcpy(redir -> fic, str, strlen(str));
+                // On prend en compte seulement le premier fichier
+                // Si `ls > fic1 fic2`, fic2 sera ignoré
 
                 if (!redir -> fic)
                     goto error;
 
-                redir -> suivante = NULL;
                 string_delete(nextCmd);
             }
 
             char *c = copy(s);
+            s = NULL; // Pour éviter le double free lors d'un `goto error`
             redir -> cmd = create_cmd(c);
             free(c);
 
@@ -72,26 +84,20 @@ redirection *create_redir(char *line) {
             return redir;
 
         } else {
-            // mettre dans mystring les tokens
-            char *c = calloc(strlen(str) + 1, 1);
-            memcpy(c, str, strlen(str));
-            string_append(s, c);
-            free(c);
+            // Mettre dans mystring les tokens
+            string_append(s, str);
             string_append(s, " ");
         }
     }while ((str = strtok(NULL, " ")) != NULL);
 
-    // si sortie de la boucle -> pas de redirection
+    // Si sortie de la boucle -> pas de redirection
     char *c = copy(s);
+    s = NULL; // Pour éviter le double free lors d'un `goto error`
     redir -> cmd = create_cmd(c);
     free(c);
 
     if (!redir -> cmd)
         goto error;
-
-    redir -> type = NULL;
-    redir -> fic = NULL;
-    redir -> suivante = NULL;
     string_delete(nextCmd);
 
     return redir;

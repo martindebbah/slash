@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
     sigaction(SIGTERM, &action, NULL);
 
     char *oldpwd = pwd(1);
-    setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour éviter une seg fault
-    free(oldpwd);                             // lors du premier appel à cd.
+    setenv("OLDPWD", oldpwd, strlen(oldpwd)); // On set la valeur de OLDPWD pour premier appel à cd
+    free(oldpwd);
     
     while (1) {
         // Affichage du prompt + récupération de la ligne de commande
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 }
 
 int executeCmd(commande *cmd) {
-    if (strcmp(cmd -> name, "exit") == 0) { // Si exit -> break
+    if (strcmp(cmd -> name, "exit") == 0) { // Si exit
         // Stocker la valeur de sortie si spécifiée
         if (cmd -> nbParam > 0) {
             char *param = getParamAt(cmd, 0);
@@ -93,26 +93,30 @@ int executeCmd(commande *cmd) {
         clear_history();
         cmd_exit(val);
 
-    }else if (strcmp(cmd -> name, "pwd") == 0) { // PWD
+    }else if (strcmp(cmd -> name, "pwd") == 0) { // Si pwd
         val = cmd_pwd(cmd);
 
-    }else if (strcmp(cmd -> name, "cd") == 0) { // CD
+    }else if (strcmp(cmd -> name, "cd") == 0) { // Si cd
         val = cmd_cd(cmd);
 
     }else { // Pas une commande interne
         pid_t pid = fork();
         char **p = paramToTab(cmd);
 
-        if (pid == 0) { // Child
-            // Prise en compte des signaux
+        if (pid == 0) { // Child process
+            // Prise en compte des signaux par la commande externe
             struct sigaction action = {0};
             action.sa_handler = SIG_DFL;
             sigaction(SIGINT, &action, NULL);
             sigaction(SIGTERM, &action, NULL);
 
-            execvp(cmd -> name, p);
+            execvp(cmd -> name, p); // Exécution de la commande externe
+            // Si la commande fonctionne -> recouvrement du processus fils
+            // -> changement de main donc pas accès au code qui suit
+
+            // Sinon, la commande n'existe pas
             exit(127);
-        }else { // Parent
+        }else { // Parent process
             int status;
             waitpid(pid, &status, 0);
 

@@ -66,13 +66,76 @@ int main(int argc, char **argv) {
         free(hist);
 
         // Exécution des commandes
-        val = executeCmd(redir -> cmd); // Remplacer par executeRedir()
+        val = executeRedirection(redir);
         delete_redir(redir);
     }
 
     clear_history();
     return 1;
 }
+
+// Execute la redirection utilisée dans la ligne de commande
+int executeRedirection(redirection *redir) {
+    int val = 0;
+
+    if (redir -> type == NULL) { // Pas de redirection
+        val = executeCmd(redir -> cmd);
+    }else { //Redirection
+        int fd[2];
+        pipe(fd);
+
+        pid_t pid = fork();
+
+        char **p = paramToTab(redir -> cmd);
+        if (pid == 0) { // Child process
+            // Prise en compte des signaux par la commande externe
+            struct sigaction action = {0};
+            action.sa_handler = SIG_DFL;
+            sigaction(SIGINT, &action, NULL);
+            sigaction(SIGTERM, &action, NULL);
+
+            // Redirection
+            if (strcmp(redir -> type, ">")) { // Redirection de sortie
+            }else if (strcmp(redir -> type, "<")) { // Redirection d'entrée
+                freopen(redir -> fic, "r", stdin);
+            }else if (strcmp(redir -> type, ">|")) { // Redirection de sortie avec création 
+                freopen(redir -> fic, "w", stdout);
+            }else if (strcmp(redir -> type, ">>")) { // Redirection d'ajout
+                freopen(redir -> fic, "a", stdout);
+            }else if (strcmp(redir -> type, "2>")) { // Redirection d'erreur
+                freopen(redir -> fic, "a", stderr);
+            }else if (strcmp(redir -> type, "2>|")) { // Redirection d'erreur avec création
+                freopen(redir -> fic, "w", stderr);
+            }else if (strcmp(redir -> type, "2>>")) { // Redirection d'ajout d'erreur
+                freopen(redir -> fic, "a", stderr);
+            }//else if (strcmp(redir -> type, "|")) { // Pipe}
+            execvp(redir -> cmd -> name, p); // Exécution de la commande externe
+            // Si la commande fonctionne -> recouvrement du processus fils
+            // -> changement de main donc pas accès au code qui suit
+
+            // Sinon, la commande n'existe pas
+            exit(127);
+
+        }else { // Parent process
+            int status;
+            waitpid(pid, &status, 0);
+
+            if (WIFSIGNALED(status)) { // Si processus arrêté par un signal
+                val = 255;
+                printf("\n");
+            }else // Sinon la valeur de retour du processus fils
+                val = WEXITSTATUS(status);
+
+        }
+
+        delete_tab(p);
+        close(fd[0]);
+        close(fd[1]);
+    }
+
+    return val;
+}
+
 
 int executeCmd(commande *cmd) {
     if (strcmp(cmd -> name, "exit") == 0) { // Si exit

@@ -1,6 +1,9 @@
 #ifndef SLASH
 #define SLASH
 
+// Exécute la redirection
+int executeRedirection(redirection *redir);
+
 // Exécute la commande
 int executeCmd(commande *cmd);
 

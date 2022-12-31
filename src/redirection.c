@@ -209,9 +209,25 @@ void delete_redir(redirection *redir) {
 int isRedir(redirection *redir) {
     return redir -> in != NULL
         || redir -> out != NULL
-        || redir -> err != NULL;
+        || redir -> err != NULL
+        || redir -> pipe != NULL;
 }
 
 int isPipeline(redirection *redir) {
-    return redir -> pipe != NULL && isTokPipe(redir -> pipe);
+    return redir -> pipe != NULL;
 }
+
+// void print(redirection *redir) {
+//     printf("nom : %s\n", redir -> cmd -> name);
+//     if (redir -> in)
+//         printf("%s %s\n", redir -> in, redir -> fic_in);
+//     if (redir -> out)
+//         printf("%s %s\n", redir -> out, redir -> fic_out);
+//     if (redir -> err)
+//         printf("%s %s\n", redir -> err, redir -> fic_err);
+//     if (redir -> pipe) {
+//         printf("%s\n", redir -> pipe);
+//         print(redir -> suivante);
+//     }
+//     printf("\n");
+// }

@@ -74,30 +74,73 @@ int main(int argc, char **argv) {
     clear_history();
     return 1;
 }
+
+void reset(int fd_in, int fd_out, int fd_err) {
+    // Réinitialisation de l'entrée standard
+    dup2(fd_in, 0);
+    close(fd_in);
+    
+    // Réinitialisation de la sortie standard
+    dup2(fd_out, 1);
+    close(fd_out);
+
+    // Réinitialisation de la sortie erreur
+    dup2(fd_err, 2);
+    close(fd_err);
+}
+
 int executeRedirection(redirection *redir) {
-// Execute la redirection utilisée dans la ligne de commande
+    int stdin = dup(0);
+    int stdout = dup(1);
+    int stderr = dup(2);
+
+    // Execute la redirection utilisée dans la ligne de commande
     if (isRedir(redir) == 0 || strcmp(redir -> cmd -> name, "exit") == 0) { // Pas de redirection
         val = executeCmd(redir -> cmd);
+
     }else { //Redirection
         if (isPipeline(redir)) { // Pipe
-            // TODO "|"
-            int fd_pipe[2];
-            if (pipe(fd_pipe) == -1)
-                return 1;
-            pid_t pid2 = fork();
-            if (pid2 == 0) { // Child process
-                dup2(fd_pipe[1], 1);
-                close(fd_pipe[0]);
-                close(fd_pipe[1]);
-                exit(executeRedirection(redir -> suivante));
-            }else { // Parent process
-                dup2(fd_pipe[0], 0);
-                close(fd_pipe[0]);
-                close(fd_pipe[1]);
-                val = executeCmd(redir -> cmd);
+            redirection *current = redir;
+            while (current != NULL) {
+                int fd[2];
+                if (pipe(fd) == -1) {
+                    // Erreur lors de la création du tube
+                    return 1;
+                }
+
+                pid_t pid = fork();
+                if (pid == 0) { // Processus enfant
+                    if (current -> suivante) {
+                        dup2(fd[1], 1); // Redirection de la sortie vers l'entrée du tube
+                        close(fd[0]);
+                        close(fd[1]);
+                    }else {
+                        // Réinitialisation de la sortie standard
+                        dup2(stdin, 1);
+                    }
+
+                    exit(executeCmd(current->cmd));
+                    
+                } else { // Processus parent
+                    dup2(fd[0], 0); // Redirection de l'entrée depuis le tube
+                    close(fd[0]);
+                    close(fd[1]);
+
+                    int status;
+                    waitpid(pid, &status, 0); // Attente de la terminaison du processus enfant
+
+                    val = WEXITSTATUS(status);
+                }
+                
+                current = current->suivante;
+
+                if (val != 0)
+                    current = NULL;
             }
+
         }else {
             pid_t pid = fork();
+
             if (pid == 0) { // Child process
                 // Prise en compte des signaux par la commande externe
                 struct sigaction action = {0};
@@ -107,73 +150,56 @@ int executeRedirection(redirection *redir) {
 
                 // Redirection
                 if (redir -> in != NULL){ // Redirection d'entrée
-                    // TODO "<"
                     int fd_in = open(redir -> fic_in, O_RDONLY);
                     if (fd_in == -1) {
                         perror("Error while opening file for input redirection");
                         exit(1);
                     }
+
                     dup2(fd_in, 0);
                     close(fd_in);
                 }
+
                 if (redir -> out != NULL){
+                    int fd_out = -1;
                     if (strcmp(redir -> out, ">") == 0) { // Redirection de sortie
-                        // TODO ">"
-                        int fd_out = open(redir -> fic_out, O_WRONLY | O_CREAT | O_EXCL, 0644);
-                        if (fd_out == -1) {
-                            perror("Error while creating file for output redirection");
-                            exit(1);
-                        }
-                        dup2(fd_out, 1);
-                        close(fd_out);            
+                        fd_out = open(redir -> fic_out, O_WRONLY | O_CREAT | O_EXCL, 0644);
+
                     }else if (strcmp(redir -> out, ">|") == 0) { // Redirection de sortie avec création
-                        // TODO ">|"
-                        int fd_out = open(redir -> fic_out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                        if (fd_out == -1) {
-                            perror("Error while creating file for output redirection");
-                            exit(1);
-                        }
-                        dup2(fd_out, 1);
-                        close(fd_out);
+                        fd_out = open(redir -> fic_out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
                     }else if (strcmp(redir -> out, ">>") == 0) { // Redirection d'ajout
-                        int fd_out = open(redir -> fic_out, O_WRONLY | O_APPEND | O_CREAT, 0644);
-                        if (fd_out == -1) {
-                            perror("Error while creating file for output redirection");
-                            exit(1);
-                        }
-                        dup2(fd_out, 1);
-                        close(fd_out);
+                        fd_out = open(redir -> fic_out, O_WRONLY | O_APPEND | O_CREAT, 0644);
                     }
+
+                    if (fd_out == -1) {
+                        perror("Error while creating file for output redirection");
+                        exit(1);
+                    }
+
+                    dup2(fd_out, 1);
+                    close(fd_out);
                 }
+                
                 if (redir -> err != NULL) {
+                    int fd_err = -1;
                     if (strcmp(redir -> err, "2>") == 0) { // Redirection d'erreur
-                        // TODO "2>"
-                        int fd_err = open(redir -> fic_err, O_WRONLY | O_CREAT | O_EXCL, 0644);
-                        if (fd_err == -1) {
-                            perror("Error while creating file for output redirection");
-                            exit(1);
-                        }
-                        dup2(fd_err, 2);
-                        close(fd_err);
+                        fd_err = open(redir -> fic_err, O_WRONLY | O_CREAT | O_EXCL, 0644);
+
                     }else if (strcmp(redir -> err, "2>|") == 0) { // Redirection d'erreur avec création
-                        // TODO "2>|"
-                        int fd_err = open(redir -> fic_err, O_WRONLY | O_TRUNC | O_CREAT, 0644);
-                        if (fd_err == -1) {
-                            perror("Error while creating file for output redirection");
-                            exit(1);
-                        }
-                        dup2(fd_err, 2);
-                        close(fd_err);
+                        fd_err = open(redir -> fic_err, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+
                     }else if (strcmp(redir -> err, "2>>") == 0) { // Redirection d'ajout d'erreur
-                        // TODO "2>>"
-                        int fd_err = open(redir -> fic_err, O_WRONLY | O_APPEND | O_CREAT, 0644);
-                        if (fd_err == -1) {
-                            perror("Error while creating file for output redirection");
-                            exit(1);
-                        }
-                        dup2(fd_err, 2);
-                        close(fd_err);              
+                        fd_err = open(redir -> fic_err, O_WRONLY | O_APPEND | O_CREAT, 0644);
                     }
+
+                    if (fd_err == -1) {
+                        perror("Error while creating file for output redirection");
+                        exit(1);
+                    }
+
+                    dup2(fd_err, 2);
+                    close(fd_err);              
                 }
 
                 exit (executeCmd(redir -> cmd));
@@ -187,28 +213,13 @@ int executeRedirection(redirection *redir) {
                     printf("\n");
                 }else // Sinon la valeur de retour du processus fils
                     val = WEXITSTATUS(status);
-
             }
         }
     }
-    // Réinitialisation de la sortie standard
-    int fd_out = dup(1);
-    dup2(fd_out, 1);
-    close(fd_out);
-
-    // Réinitialisation de l'entrée standard
-    int fd_in = dup(0);
-    dup2(fd_in, 0);
-    close(fd_in);
-
-    // Réinitialisation de la sortie erreur
-    int fd_err = dup(2);
-    dup2(fd_err, 2);
-    close(fd_err);
-
+    reset(stdin, stdout, stderr);
+    
     return val;
 }
-
 
 int executeCmd(commande *cmd) {
     if (strcmp(cmd -> name, "exit") == 0) { // Si exit

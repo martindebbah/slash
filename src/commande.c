@@ -107,8 +107,9 @@ parametres *create_param_list(string_list *l) {
         return NULL;
 }
 
-int is_joker_prefix(char *str){
+int is_joker_prefix(char *str){ // accepte les jokers de type * et **
     int res = 1;
+    int cptEtoiles = 0;
     char *joker = strchr(str,'*');
     if(strlen(str) == 1) return res;
     while(joker != NULL){
@@ -118,11 +119,17 @@ int is_joker_prefix(char *str){
             continue;
         }
         joker--;
-        if(joker[0] != '/'){
+        if(joker[0] == '*') cptEtoiles++;
+        else cptEtoiles = 0;
+        if(joker[0] != '/' && joker[0] != '*'){
             res = 0;
             break;
         }
         else{
+            if(cptEtoiles > 1){
+                res = 0;
+                break;
+            }
             joker = joker + 2;
         }
         joker = strchr(joker,'*');
@@ -141,6 +148,11 @@ string_list *process_joker(char *str){
     if(!suf)
         return NULL;
     int i = 1;
+    int is_double_star = 0;
+    if(suf[i] == '*'){
+        is_double_star = 1;
+        i++;
+    }
 
     string_list* path;
     if(suf[i] == '/'){

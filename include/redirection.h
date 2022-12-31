@@ -31,6 +31,4 @@ int isRedir(redirection *r);
 // 0 si c'est une redirection vers/depuis un fichier
 int isPipeline(redirection *r);
 
-// void print(redirection *r);
-
 #endif

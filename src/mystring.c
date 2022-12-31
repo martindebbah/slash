@@ -86,6 +86,10 @@ void string_truncate_where(struct string * str, char delimit) {
 }
 
 char *copy(struct string *path) {
+  if (path -> length == 0) {
+    string_delete(path);
+    return NULL;
+  }
   int l = path -> length;
   char *ret = calloc(l + 1, 1);
   memcpy(ret, path -> data, l);

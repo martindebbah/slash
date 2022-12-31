@@ -89,134 +89,127 @@ void reset(int fd_in, int fd_out, int fd_err) {
     close(fd_err);
 }
 
+// Redirection d'entrée
+int redirect_in(char *fic) {
+    int fd = open(fic, O_RDONLY);
+    if (fd == -1) {
+        perror("Error while opening file for input redirection");
+        return -1;
+    }
+
+    dup2(fd, 0);
+    close(fd);
+    return 0;
+}
+
+int redirect_out(char *r, char *fic) {
+    int fd = -1;
+    if (strcmp(r, ">") == 0) { // Redirection de sortie
+        fd = open(fic, O_WRONLY | O_CREAT | O_EXCL, 0644);
+
+    }else if (strcmp(r, ">|") == 0) { // Redirection de sortie avec création
+        fd = open(fic, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+    }else if (strcmp(r, ">>") == 0) { // Redirection d'ajout
+        fd = open(fic, O_WRONLY | O_APPEND | O_CREAT, 0644);
+    }
+
+    if (fd == -1) {
+        perror("Error while creating file for standard output redirection");
+        return -1;
+    }
+
+    dup2(fd, 1);
+    close(fd);
+    return 0;
+}
+
+int redirect_err(char *r, char *fic) {
+    int fd = -1;
+    if (strcmp(r, "2>") == 0) { // Redirection d'erreur
+        fd = open(fic, O_WRONLY | O_CREAT | O_EXCL, 0644);
+
+    }else if (strcmp(r, "2>|") == 0) { // Redirection d'erreur avec création
+        fd = open(fic, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+
+    }else if (strcmp(r, "2>>") == 0) { // Redirection d'ajout d'erreur
+        fd = open(fic, O_WRONLY | O_APPEND | O_CREAT, 0644);
+    }
+
+    if (fd == -1) {
+        perror("Error while creating file for error output redirection");
+        return -1;
+    }
+
+    dup2(fd, 2);
+    close(fd);
+    return 0;
+}
+
 int executeRedirection(redirection *redir) {
-    int stdin = dup(0);
-    int stdout = dup(1);
-    int stderr = dup(2);
+    int stdin_fd = dup(0);
+    int stdout_fd = dup(1);
+    int stderr_fd = dup(2);
 
     // Execute la redirection utilisée dans la ligne de commande
     if (isRedir(redir) == 0 || strcmp(redir -> cmd -> name, "exit") == 0) { // Pas de redirection
         val = executeCmd(redir -> cmd);
 
-    }else { //Redirection
-        if (isPipeline(redir)) { // Pipe
-            redirection *current = redir;
-            while (current != NULL) {
-                int fd[2];
-                if (pipe(fd) == -1) {
-                    // Erreur lors de la création du tube
-                    return 1;
-                }
+    }else { // Redirection
+        redirection *current = redir;
+        while (current != NULL) {
+            int fd[2];
+            if (pipe(fd) == -1) {
+                // Erreur lors de la création du tube
+                return 1;
+            }
 
-                pid_t pid = fork();
-                if (pid == 0) { // Processus enfant
-                    if (current -> suivante) {
-                        dup2(fd[1], 1); // Redirection de la sortie vers l'entrée du tube
-                        close(fd[0]);
-                        close(fd[1]);
-                    }else {
-                        // Réinitialisation de la sortie standard
-                        dup2(stdin, 1);
-                    }
+            pid_t pid = fork();
 
-                    exit(executeCmd(current->cmd));
-                    
-                } else { // Processus parent
-                    dup2(fd[0], 0); // Redirection de l'entrée depuis le tube
+            if (pid == 0) { // Processus enfant
+                if (isPipeline(current)) { // Si encore une commande après
+                    dup2(fd[1], 1); // Redirection de la sortie standard vers l'entrée du tube
                     close(fd[0]);
                     close(fd[1]);
 
-                    int status;
-                    waitpid(pid, &status, 0); // Attente de la terminaison du processus enfant
-
-                    val = WEXITSTATUS(status);
+                }else { // Si c'est la dernière commande
+                    int r;
+                    if (current -> out) // Elle a une redirection de sortie standard
+                        r = redirect_out(current -> out, current -> fic_out);
+                    else // Sinon, réinitialisation de la sortie standard
+                        r = dup2(stdout_fd, 1);
+                    if (r == -1)
+                        exit(1);
                 }
+
+                if (current -> err) // Si redirection de la sortie erreur
+                    if (redirect_err(current -> err, current -> fic_err) == -1)
+                        exit(1);
+
+                if (current -> in) // Si redirection de l'entrée standard
+                    if (redirect_in(current -> fic_in) == -1)
+                        exit(1);
+
+                exit(executeCmd(current->cmd));
                 
-                current = current->suivante;
+            } else { // Processus parent
+                dup2(fd[0], 0); // Redirection de l'entrée depuis le tube
+                close(fd[0]);
+                close(fd[1]);
 
-                if (val != 0)
-                    current = NULL;
-            }
-
-        }else {
-            pid_t pid = fork();
-
-            if (pid == 0) { // Child process
-                // Prise en compte des signaux par la commande externe
-                struct sigaction action = {0};
-                action.sa_handler = SIG_DFL;
-                sigaction(SIGINT, &action, NULL);
-                sigaction(SIGTERM, &action, NULL);
-
-                // Redirection
-                if (redir -> in != NULL){ // Redirection d'entrée
-                    int fd_in = open(redir -> fic_in, O_RDONLY);
-                    if (fd_in == -1) {
-                        perror("Error while opening file for input redirection");
-                        exit(1);
-                    }
-
-                    dup2(fd_in, 0);
-                    close(fd_in);
-                }
-
-                if (redir -> out != NULL){
-                    int fd_out = -1;
-                    if (strcmp(redir -> out, ">") == 0) { // Redirection de sortie
-                        fd_out = open(redir -> fic_out, O_WRONLY | O_CREAT | O_EXCL, 0644);
-
-                    }else if (strcmp(redir -> out, ">|") == 0) { // Redirection de sortie avec création
-                        fd_out = open(redir -> fic_out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-
-                    }else if (strcmp(redir -> out, ">>") == 0) { // Redirection d'ajout
-                        fd_out = open(redir -> fic_out, O_WRONLY | O_APPEND | O_CREAT, 0644);
-                    }
-
-                    if (fd_out == -1) {
-                        perror("Error while creating file for output redirection");
-                        exit(1);
-                    }
-
-                    dup2(fd_out, 1);
-                    close(fd_out);
-                }
-                
-                if (redir -> err != NULL) {
-                    int fd_err = -1;
-                    if (strcmp(redir -> err, "2>") == 0) { // Redirection d'erreur
-                        fd_err = open(redir -> fic_err, O_WRONLY | O_CREAT | O_EXCL, 0644);
-
-                    }else if (strcmp(redir -> err, "2>|") == 0) { // Redirection d'erreur avec création
-                        fd_err = open(redir -> fic_err, O_WRONLY | O_TRUNC | O_CREAT, 0644);
-
-                    }else if (strcmp(redir -> err, "2>>") == 0) { // Redirection d'ajout d'erreur
-                        fd_err = open(redir -> fic_err, O_WRONLY | O_APPEND | O_CREAT, 0644);
-                    }
-
-                    if (fd_err == -1) {
-                        perror("Error while creating file for output redirection");
-                        exit(1);
-                    }
-
-                    dup2(fd_err, 2);
-                    close(fd_err);              
-                }
-
-                exit (executeCmd(redir -> cmd));
-            
-            }else { // Parent process
                 int status;
-                waitpid(pid, &status, 0);
+                waitpid(pid, &status, 0); // Attente de la terminaison du processus enfant
 
-                if (WIFSIGNALED(status)) { // Si processus arrêté par un signal
-                    val = 255;
-                    printf("\n");
-                }else // Sinon la valeur de retour du processus fils
-                    val = WEXITSTATUS(status);
+                val = WEXITSTATUS(status);
             }
+            
+            current = current->suivante;
+
+            if (val != 0)
+                current = NULL;
         }
     }
-    reset(stdin, stdout, stderr);
+    reset(stdin_fd, stdout_fd, stderr_fd);
     
     return val;
 }
@@ -381,3 +374,132 @@ char *cutPath(char *path, int max) {
     }
     return p;
 }
+
+/*
+    do {
+        nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+        if (isTokRed(str)) { // Si token de redirection
+            while (str && isTokRed(str) && isTokPipe(str) == 0) {
+                if (strcmp(str, "<") == 0) {
+                    redir -> in = calloc(strlen(str) + 1, 1);
+                    memcpy(redir -> in, str, strlen(str));
+                    if (!redir -> in)
+                        goto error;
+
+                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+                    str = strtok(NULL, " ");
+                    if (str == NULL)
+                        goto error;
+
+                    if (strchr(str, '*') != NULL && is_joker_prefix(str)) {
+                        string_list *fic = process_joker(str);
+                        if (fic && fic -> s && !fic -> suivant) {
+                            redir -> fic_in = calloc(strlen(fic -> s) + 1, 1);
+                            memcpy(redir -> fic_in, fic -> s, strlen(fic -> s));
+                        }
+                        list_delete(fic);
+                    }else {
+                        redir -> fic_in = calloc(strlen(str) + 1, 1);
+                        memcpy(redir -> fic_in, str, strlen(str));
+                    }
+
+                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+                    if (!redir -> fic_in)
+                        goto error;
+                }else if (strcmp(str, ">") == 0 || strcmp(str, ">>") == 0 || strcmp(str, ">|") == 0) {
+                    redir -> out = calloc(strlen(str) + 1, 1);
+                    memcpy(redir -> out, str, strlen(str));
+                    if (!redir -> out)
+                        goto error;
+
+                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+                    str = strtok(NULL, " ");
+                    if (str == NULL)
+                        goto error;
+
+                    if (strchr(str, '*') != NULL && is_joker_prefix(str)) {
+                        string_list *fic = process_joker(str);
+                        if (fic && fic -> s && !fic -> suivant) {
+                            redir -> fic_out = calloc(strlen(fic -> s) + 1, 1);
+                            memcpy(redir -> fic_out, fic -> s, strlen(fic -> s));
+                        }
+                        list_delete(fic);
+                    }else {
+                        redir -> fic_out = calloc(strlen(str) + 1, 1);
+                        memcpy(redir -> fic_out, str, strlen(str));
+                    }
+
+                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+                    if (!redir -> fic_out)
+                        goto error;
+                }else if (strcmp(str, "2>") == 0 || strcmp(str, "2>>") == 0 || strcmp(str, "2>|") == 0) {
+                    redir -> err = calloc(strlen(str) + 1, 1);
+                    memcpy(redir -> err, str, strlen(str));
+                    if (!redir -> err)
+                        goto error;
+
+                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+                    str = strtok(NULL, " ");
+                    if (str == NULL)
+                        goto error;
+                        
+                    if (strchr(str, '*') != NULL && is_joker_prefix(str)) {
+                        string_list *fic = process_joker(str);
+                        if (fic && fic -> s && !fic -> suivant) {
+                            redir -> fic_err = calloc(strlen(fic -> s) + 1, 1);
+                            memcpy(redir -> fic_err, fic -> s, strlen(fic -> s));
+                        }
+                        list_delete(fic);
+                    }else {
+                        redir -> fic_err = calloc(strlen(str) + 1, 1);
+                        memcpy(redir -> fic_err, str, strlen(str));
+                    }
+
+                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
+
+                    if (!redir -> fic_err)
+                        goto error;
+                }
+
+                    str = strtok(NULL, " ");
+            }
+
+            if (str && isTokPipe(str)) { // Si la redirection est une pipeline
+            redir -> pipe = calloc(strlen(str) + 1, 1);
+            memcpy(redir -> pipe, str, strlen(str));
+            if (!redir -> pipe)
+                goto error;
+
+            char *c = copy(nextCmd);
+            nextCmd = NULL; // Pour éviter le double free lors d'un `goto error`
+            redir -> suivante = create_redir(c);
+            free(c);
+            if (!redir -> suivante)
+                goto error;
+            }else
+                string_delete(nextCmd);
+
+            char *c = copy(s);
+            s = NULL; // Pour éviter le double free lors d'un `goto error`
+            redir -> cmd = create_cmd(c);
+            free(c);
+
+            if (!redir -> cmd)
+                goto error;
+
+            return redir;
+
+        } else {
+            // Mettre dans mystring les tokens
+            string_append(s, str);
+            string_append(s, " ");
+        }
+    }while ((str = strtok(NULL, " ")) != NULL);
+
+*/

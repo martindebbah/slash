@@ -7,8 +7,13 @@ typedef struct redirection redirection;
 
 struct redirection {
     commande *cmd;
-    char *type;
-    char *fic;
+    char *pipe;
+    char *in;
+    char *out;
+    char *err;
+    char *fic_in;
+    char *fic_out;
+    char *fic_err;
     redirection *suivante;
 };
 

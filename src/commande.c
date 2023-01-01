@@ -154,21 +154,23 @@ string_list *process_joker(char *str){
         i++;
     }
 
+    //printf("suf : %s, %d\n", suf, i);
+
     string_list* path;
-    if(suf[i] == '/'){
+    if(suf[i] == '/'){ // ls */suf
         i++;
         path = parcours_repertoire(dir_to_open->data, &suf[i], NULL, is_double_star);
     }
-    else if(suf[i] == '\0'){
-        path = parcours_repertoire(dir_to_open->data, NULL, NULL, 0);
+    else if(suf[i] == '\0'){ // suf vide
+        path = parcours_repertoire(dir_to_open->data, NULL, NULL, is_double_star);
     }
     else {
-        struct string *word_to_compare = string_new(strlen(suf + i)+1);
+        struct string *word_to_compare = string_new(strlen(suf + i)+1); // ls *.c/fe
         string_append(word_to_compare, &suf[i]);
         string_truncate_where(word_to_compare, '/');
         if(strlen(suf + i) > word_to_compare->length) i += word_to_compare->length+1;
         else i += word_to_compare->length;
-        
+
         if(strlen(suf + i) == 0){
             path = parcours_repertoire(dir_to_open->data, NULL, word_to_compare->data, is_double_star);
         }

@@ -65,7 +65,7 @@ redirection *create_redir(char *line) {
                     nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
 
                     str = strtok(NULL, " ");
-                    if (str == NULL)
+                    if (str == NULL || isTokRed(str))
                         goto error;
 
                     nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
@@ -95,7 +95,7 @@ redirection *create_redir(char *line) {
                     nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
 
                     str = strtok(NULL, " ");
-                    if (str == NULL)
+                    if (str == NULL || isTokRed(str))
                         goto error;
 
                     nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
@@ -125,7 +125,7 @@ redirection *create_redir(char *line) {
                     nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
 
                     str = strtok(NULL, " ");
-                    if (str == NULL)
+                    if (str == NULL || isTokRed(str))
                         goto error;
 
                     nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));

@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         if (!redir) {
             free(line);
             free(hist);
-            val = 127;
+            val = 1;
             continue;
         }
 
@@ -105,13 +105,13 @@ int redirect_in(char *fic) {
 int redirect_out(char *r, char *fic) {
     int fd = -1;
     if (strcmp(r, ">") == 0) { // Redirection de sortie
-        fd = open(fic, O_WRONLY | O_CREAT | O_EXCL, 0644);
+        fd = open(fic, O_WRONLY | O_CREAT | O_EXCL, 0664);
 
     }else if (strcmp(r, ">|") == 0) { // Redirection de sortie avec création
-        fd = open(fic, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        fd = open(fic, O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
     }else if (strcmp(r, ">>") == 0) { // Redirection d'ajout
-        fd = open(fic, O_WRONLY | O_APPEND | O_CREAT, 0644);
+        fd = open(fic, O_WRONLY | O_APPEND | O_CREAT, 0664);
     }
 
     if (fd == -1) {
@@ -127,13 +127,13 @@ int redirect_out(char *r, char *fic) {
 int redirect_err(char *r, char *fic) {
     int fd = -1;
     if (strcmp(r, "2>") == 0) { // Redirection d'erreur
-        fd = open(fic, O_WRONLY | O_CREAT | O_EXCL, 0644);
+        fd = open(fic, O_WRONLY | O_CREAT | O_EXCL, 0664);
 
     }else if (strcmp(r, "2>|") == 0) { // Redirection d'erreur avec création
-        fd = open(fic, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+        fd = open(fic, O_WRONLY | O_TRUNC | O_CREAT, 0664);
 
     }else if (strcmp(r, "2>>") == 0) { // Redirection d'ajout d'erreur
-        fd = open(fic, O_WRONLY | O_APPEND | O_CREAT, 0644);
+        fd = open(fic, O_WRONLY | O_APPEND | O_CREAT, 0664);
     }
 
     if (fd == -1) {
@@ -376,132 +376,3 @@ char *cutPath(char *path, int max) {
     }
     return p;
 }
-
-/*
-    do {
-        nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-        if (isTokRed(str)) { // Si token de redirection
-            while (str && isTokRed(str) && isTokPipe(str) == 0) {
-                if (strcmp(str, "<") == 0) {
-                    redir -> in = calloc(strlen(str) + 1, 1);
-                    memcpy(redir -> in, str, strlen(str));
-                    if (!redir -> in)
-                        goto error;
-
-                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-                    str = strtok(NULL, " ");
-                    if (str == NULL)
-                        goto error;
-
-                    if (strchr(str, '*') != NULL && is_joker_prefix(str)) {
-                        string_list *fic = process_joker(str);
-                        if (fic && fic -> s && !fic -> suivant) {
-                            redir -> fic_in = calloc(strlen(fic -> s) + 1, 1);
-                            memcpy(redir -> fic_in, fic -> s, strlen(fic -> s));
-                        }
-                        list_delete(fic);
-                    }else {
-                        redir -> fic_in = calloc(strlen(str) + 1, 1);
-                        memcpy(redir -> fic_in, str, strlen(str));
-                    }
-
-                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-                    if (!redir -> fic_in)
-                        goto error;
-                }else if (strcmp(str, ">") == 0 || strcmp(str, ">>") == 0 || strcmp(str, ">|") == 0) {
-                    redir -> out = calloc(strlen(str) + 1, 1);
-                    memcpy(redir -> out, str, strlen(str));
-                    if (!redir -> out)
-                        goto error;
-
-                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-                    str = strtok(NULL, " ");
-                    if (str == NULL)
-                        goto error;
-
-                    if (strchr(str, '*') != NULL && is_joker_prefix(str)) {
-                        string_list *fic = process_joker(str);
-                        if (fic && fic -> s && !fic -> suivant) {
-                            redir -> fic_out = calloc(strlen(fic -> s) + 1, 1);
-                            memcpy(redir -> fic_out, fic -> s, strlen(fic -> s));
-                        }
-                        list_delete(fic);
-                    }else {
-                        redir -> fic_out = calloc(strlen(str) + 1, 1);
-                        memcpy(redir -> fic_out, str, strlen(str));
-                    }
-
-                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-                    if (!redir -> fic_out)
-                        goto error;
-                }else if (strcmp(str, "2>") == 0 || strcmp(str, "2>>") == 0 || strcmp(str, "2>|") == 0) {
-                    redir -> err = calloc(strlen(str) + 1, 1);
-                    memcpy(redir -> err, str, strlen(str));
-                    if (!redir -> err)
-                        goto error;
-
-                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-                    str = strtok(NULL, " ");
-                    if (str == NULL)
-                        goto error;
-                        
-                    if (strchr(str, '*') != NULL && is_joker_prefix(str)) {
-                        string_list *fic = process_joker(str);
-                        if (fic && fic -> s && !fic -> suivant) {
-                            redir -> fic_err = calloc(strlen(fic -> s) + 1, 1);
-                            memcpy(redir -> fic_err, fic -> s, strlen(fic -> s));
-                        }
-                        list_delete(fic);
-                    }else {
-                        redir -> fic_err = calloc(strlen(str) + 1, 1);
-                        memcpy(redir -> fic_err, str, strlen(str));
-                    }
-
-                    nextCmd = string_truncate_token_and_spaces(nextCmd, strlen(str));
-
-                    if (!redir -> fic_err)
-                        goto error;
-                }
-
-                    str = strtok(NULL, " ");
-            }
-
-            if (str && isTokPipe(str)) { // Si la redirection est une pipeline
-            redir -> pipe = calloc(strlen(str) + 1, 1);
-            memcpy(redir -> pipe, str, strlen(str));
-            if (!redir -> pipe)
-                goto error;
-
-            char *c = copy(nextCmd);
-            nextCmd = NULL; // Pour éviter le double free lors d'un `goto error`
-            redir -> suivante = create_redir(c);
-            free(c);
-            if (!redir -> suivante)
-                goto error;
-            }else
-                string_delete(nextCmd);
-
-            char *c = copy(s);
-            s = NULL; // Pour éviter le double free lors d'un `goto error`
-            redir -> cmd = create_cmd(c);
-            free(c);
-
-            if (!redir -> cmd)
-                goto error;
-
-            return redir;
-
-        } else {
-            // Mettre dans mystring les tokens
-            string_append(s, str);
-            string_append(s, " ");
-        }
-    }while ((str = strtok(NULL, " ")) != NULL);
-
-*/

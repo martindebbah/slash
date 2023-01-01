@@ -157,6 +157,7 @@ int executeRedirection(redirection *redir) {
 
     }else { // Redirection
         redirection *current = redir;
+        int isFirst = 1;
         while (current != NULL) {
             int fd[2];
             if (pipe(fd) == -1) {
@@ -186,7 +187,7 @@ int executeRedirection(redirection *redir) {
                     if (redirect_err(current -> err, current -> fic_err) == -1)
                         exit(1);
 
-                if (current -> in) // Si redirection de l'entrée standard
+                if (isFirst && current -> in) // Si redirection de l'entrée standard
                     if (redirect_in(current -> fic_in) == -1)
                         exit(1);
 
@@ -204,6 +205,7 @@ int executeRedirection(redirection *redir) {
             }
             
             current = current->suivante;
+            isFirst = 0;
 
             if (val != 0)
                 current = NULL;

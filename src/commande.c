@@ -157,10 +157,10 @@ string_list *process_joker(char *str){
     string_list* path;
     if(suf[i] == '/'){
         i++;
-        path = parcours_repertoire(dir_to_open->data, &suf[i], NULL);
+        path = parcours_repertoire(dir_to_open->data, &suf[i], NULL, is_double_star);
     }
     else if(suf[i] == '\0'){
-        path = parcours_repertoire(dir_to_open->data, NULL, NULL);
+        path = parcours_repertoire(dir_to_open->data, NULL, NULL, 0);
     }
     else {
         struct string *word_to_compare = string_new(strlen(suf + i)+1);
@@ -170,9 +170,10 @@ string_list *process_joker(char *str){
         else i += word_to_compare->length;
         
         if(strlen(suf + i) == 0){
-            path = parcours_repertoire(dir_to_open->data, NULL, word_to_compare->data);
-        }else {
-            path = parcours_repertoire(dir_to_open->data, &suf[i], word_to_compare->data);
+            path = parcours_repertoire(dir_to_open->data, NULL, word_to_compare->data, is_double_star);
+        }
+        else {
+            path = parcours_repertoire(dir_to_open->data, &suf[i], word_to_compare->data, is_double_star);
         }
         string_delete(word_to_compare);
     }

@@ -25,6 +25,9 @@ char *update_path(char *path, char *up);
 void cmd_exit(int val);
 
 // parcours le repertoire dir_to_open et stock chaque nom dans les paramètres de cmd
-string_list* parcours_repertoire(char* dir_to_open, char* suf, char* word);
+string_list* parcours_repertoire(char* dir_to_open, char* suf, char* word, int double_star);
+
+// verifie si il y a une occurence de name dans word
+int compare_word(char* word, char* name);
 
 #endif

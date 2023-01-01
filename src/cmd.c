@@ -65,7 +65,7 @@ static char* get_dirname(DIR* dir, DIR* parent) {
     
 }
 
-string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
+string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int double_star){
     // Prendre suffixe en paramètres (avant le /)
     // et aussi la suite de la ligne après char pour vérifier si contient un autre *
     struct dirent *ent;
@@ -93,75 +93,57 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
         // si oui :
         if(suf != NULL){
             // Si Une autre étoile dans la ligne :
-            if(strchr(suf, '*') != NULL){
-                if(is_joker_prefix(suf)){
-                    struct string *no_joker = string_new(strlen(suf)+1);
-                    string_append(no_joker, suf);
+            if(strchr(suf, '*') != NULL && is_joker_prefix(suf)){
+                struct string *no_joker = string_new(strlen(suf)+1);
+                string_append(no_joker, suf);
 
-                    char *c = calloc(strlen(strchr(suf,'*'))+1, 1);
-                    memcpy(c, strchr(suf,'*'), strlen(strchr(suf,'*')));
-                    if(!c)
-                        return NULL;
+                char *c = calloc(strlen(strchr(suf,'*'))+1, 1);
+                memcpy(c, strchr(suf,'*'), strlen(strchr(suf,'*')));
+                if(!c)
+                    return NULL;
 
-                    string_truncate(no_joker, strlen(c)+1);
-                    no_joker = clean(no_joker);
-                    string_append(prefixe, "/");
-                    string_append(prefixe, no_joker->data);
-                    prefixe = clean(prefixe);
+                string_truncate(no_joker, strlen(c)+1);
+                no_joker = clean(no_joker);
+                string_append(prefixe, "/");
+                string_append(prefixe, no_joker->data);
+                prefixe = clean(prefixe);
 
-                    int i = 1;
+                int i = 1;
 
-                    char *new_word = NULL;
-                    struct string *word_to_compare;
+                char *new_word = NULL;
+                struct string *word_to_compare;
 
-                    if(c[i] && c[i] != '\0'){
-                        if(c[i] != '/'){
-                            word_to_compare = string_new(strlen(c + i)+1);
-                            string_append(word_to_compare, c + i);
-                            string_truncate_where(word_to_compare, '/');
-                            if(strlen(c + i) > word_to_compare->length) i += word_to_compare->length+1;
-                            else i += word_to_compare->length;
-                            
-                            new_word = copy(word_to_compare);
-                        }
-                        else {
-                            i++;
-                        }
+                if(c[i] && c[i] != '\0'){
+                    if(c[i] != '/'){
+                        word_to_compare = string_new(strlen(c + i)+1);
+                        string_append(word_to_compare, c + i);
+                        string_truncate_where(word_to_compare, '/');
+                        if(strlen(c + i) > word_to_compare->length) i += word_to_compare->length+1;
+                        else i += word_to_compare->length;
+                        
+                        new_word = copy(word_to_compare);
                     }
-                    
-                    DIR *verif = opendir(prefixe->data);
-                    if(verif != NULL){
-
-                        if(word != NULL){
-
-                            char *tmp = ent->d_name;
-                            while(tmp[0] != '\0'){
-                                if(strcmp(tmp, word) == 0){
-                                    if(strlen(c + i) > 0) {
-                                        param = list_cat(param, parcours_repertoire(prefixe->data, &c[i], new_word));
-                                    }else {
-                                        param = list_cat(param, parcours_repertoire(prefixe->data, NULL, new_word));
-                                    }
-                                    break;
-                                }
-                                tmp++;
-                            }
-
-                        }
-                        else{
-                            if(strlen(c + i) > 0) {
-                                param = list_cat(param, parcours_repertoire(prefixe->data, &c[i], new_word));
-                            }else {
-                                param = list_cat(param, parcours_repertoire(prefixe->data, NULL, new_word));
-                            }
-                        }
-                        closedir(verif);
+                    else {
+                        i++;
                     }
-                    string_truncate(prefixe, no_joker->length+1);
-                    string_delete(no_joker);
-                    free(c);
-                    free(new_word);
                 }
+                    
+                DIR *verif = opendir(prefixe->data);
+                if(verif != NULL){
+                    char *tmp = ent->d_name;
+                    if((word != NULL && compare_word(tmp, word)) || word == NULL){
+                        if(strlen(c + i) > 0) {
+                            param = list_cat(param, parcours_repertoire(prefixe->data, &c[i], new_word, double_star));
+                        }else {
+                            param = list_cat(param, parcours_repertoire(prefixe->data, NULL, new_word, double_star));
+                        }
+                    }
+                    closedir(verif);
+                }
+                string_truncate(prefixe, no_joker->length+1);
+                string_delete(no_joker);
+                free(c);
+                free(new_word);
             // Sinon
             } else {
                 // Si suite du chemin valide   
@@ -171,20 +153,10 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
 
                 int fd = open(prefixe->data, O_RDONLY);
                 if(fd >= 0){
-                    if(word != NULL){
-
-                        char *tmp = ent->d_name;
-                        while(tmp[0] != '\0'){
-                            if(strcmp(tmp, word) == 0){
-                                list_append(param, prefixe->data);
-                                break;
-                            }
-                            tmp++;
-                        }
-
-                    }
-                    else {
+                    char *tmp = ent->d_name;
+                    if((word != NULL && compare_word(tmp, word)) || word == NULL){
                         list_append(param, prefixe->data);
+                        //if(double_star) param = list_cat(param, parcours_repertoire(prefixe->data, NULL, word, double_star));
                     }
                     close(fd);
                 }
@@ -192,20 +164,10 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
             }
         // Sinon on ajoute pas
         } else{
-            if(word != NULL){
-
-                char *tmp = ent->d_name;
-                while(tmp[0] != '\0'){
-                    if(strcmp(tmp, word) == 0){
-                        list_append(param, prefixe->data);
-                        break;
-                    }
-                    tmp++;
-                }
-
-            }
-            else{
+            char *tmp = ent->d_name;
+            if((word != NULL && compare_word(tmp, word)) || word == NULL){
                 list_append(param, prefixe->data);
+                if(double_star && ent->d_type == DT_DIR) param = list_cat(param, parcours_repertoire(prefixe->data, NULL, word, double_star));
             }
         }
 
@@ -216,6 +178,16 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word){
     string_delete(prefixe);
     closedir(dir);
     return param;   
+}
+
+int compare_word(char *tmp, char *word){
+    while(tmp[0] != '\0'){
+        if(strcmp(tmp, word) == 0){
+            return 1;
+        }
+        tmp++;
+    }
+    return 0;
 }
 
 int cmd_pwd(commande *cmd) {

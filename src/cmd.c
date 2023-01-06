@@ -197,7 +197,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
                         list_append(param, prefixe->data);
                     }
                     if(double_star && ent->d_type == DT_DIR && ent -> d_type != DT_LNK){
-                        param = list_cat(param, parcours_repertoire(prefixe->data, NULL, word, double_star));
+                        param = list_cat(param, parcours_repertoire(prefixe->data, suf, word, double_star));
                     }
                     close(fd);
                 }
@@ -208,6 +208,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
             char *tmp = ent->d_name;
             
             if((word != NULL && compare_word(tmp, word)) || word == NULL){
+                //printf("ajout : %s\n", prefixe->data);
                 list_append(param, prefixe->data);
             }
             if(double_star && ent->d_type == DT_DIR && ent -> d_type != DT_LNK){

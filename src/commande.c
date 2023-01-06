@@ -159,6 +159,7 @@ string_list *process_joker(char *str){
     string_list* path;
     if(suf[i] == '/'){ // ls */suf
         i++;
+        if(suf[i] == '\0') i--;
         path = parcours_repertoire(dir_to_open->data, &suf[i], NULL, is_double_star);
     }
     else if(suf[i] == '\0'){ // suf vide

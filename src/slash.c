@@ -264,7 +264,7 @@ int executeCmd(commande *cmd) {
 
             if (WIFSIGNALED(status)) { // Si processus arrêté par un signal
                 val = 255;
-                printf("\n");
+                write(2, "\n", 1);
             }else // Sinon la valeur de retour du processus fils
                 val = WEXITSTATUS(status);
         }

@@ -76,11 +76,6 @@ int is_prefix(char *pre, char *suf) {
     return 1;
 }
 
-// fonction juste pour ** :
-// Recherche de tous les chemins possible à partir du rép courant
-// dès qu'un fichier/rép correspond à la suite (après **) p.ex. test pour *t
-// appel à parcours_repertoire tout en continuant jusqu'à ne plus pouvoir descendre dans toutes les arborescences
-
 string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int double_star){
     // Prendre suffixe en paramètres (avant le /)
     // et aussi la suite de la ligne après char pour vérifier si contient un autre *
@@ -108,7 +103,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
         // Vérification que *suf existe
         // si oui :
         if(suf != NULL){
-            // Si Une autre étoile dans la ligne :
+            // Si une autre étoile dans la ligne :
             if(strchr(suf, '*') != NULL && is_joker_prefix(suf)){
                 struct string *no_joker = string_new(strlen(suf)+1);
                 string_append(no_joker, suf);
@@ -130,7 +125,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
                 struct string *word_to_compare;
 
                 if(c[i] && c[i] != '\0'){
-                    if(c[i] != '/'){
+                    if(c[i] != '/'){ // Si on a *suf dans la ligne
                         word_to_compare = string_new(strlen(c + i)+1);
                         string_append(word_to_compare, c + i);
                         string_truncate_where(word_to_compare, '/');
@@ -147,13 +142,14 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
                 DIR *verif = opendir(prefixe->data);
                 if(verif != NULL){
                     char *tmp = ent->d_name;
-                    if(double_star && ent -> d_type != DT_LNK){
-                        param = list_cat(param, parcours_repertoire(prefixe->data, c, new_word, double_star));
-                        if (compare_word(tmp, new_word))
+                    if(double_star){
+                        if (ent -> d_type != DT_LNK)
+                            param = list_cat(param, parcours_repertoire(prefixe->data, c, new_word, double_star));
+                        if (!new_word || compare_word(tmp, new_word))
                             param = list_cat(param, parcours_repertoire(dir_to_open, &c[i], new_word, 0));
                     }
-                    else if((word != NULL && compare_word(tmp, word)) || word == NULL){
-                        if(strlen(c + i) > 0) { // *cf/*fg   test *t *t/*2
+                    else if((word != NULL && compare_word(tmp, word)) || word == NULL){ // Si autre * dans la ligne
+                        if(strlen(c + i) > 0) {
                             param = list_cat(param, parcours_repertoire(prefixe->data, &c[i], new_word, double_star));
                         }else {
                             param = list_cat(param, parcours_repertoire(prefixe->data, NULL, new_word, double_star));
@@ -162,10 +158,10 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
                     closedir(verif);
                 }
                 else {
-                    if(double_star && ent -> d_type != DT_LNK){ // Fichier avec joker dans le répertoire courant
+                    if(double_star){ // Fichier avec joker dans le répertoire courant
                         char *tmp = ent->d_name;
                         string_truncate(prefixe, 1);
-                        if((new_word != NULL && compare_word(tmp, new_word))){
+                        if(new_word != NULL && compare_word(tmp, new_word)){
                             list_append(param, prefixe->data);
                         }
                         string_append(prefixe, "/");
@@ -179,7 +175,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
             } else {
                 // Si suite du chemin valide
                 char *tmp = ent->d_name;
-                if(double_star && is_prefix(tmp, suf) && ent -> d_type != DT_LNK){
+                if(double_star && is_prefix(tmp, suf)){
                     int fd2 = open(suf, O_RDONLY);
                     if(fd2 >= 0){
                         list_append(param, suf);
@@ -196,7 +192,7 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
                     if((word != NULL && compare_word(tmp, word)) || word == NULL){
                         list_append(param, prefixe->data);
                     }
-                    if(double_star && ent->d_type == DT_DIR && ent -> d_type != DT_LNK){
+                    if(double_star && ent->d_type == DT_DIR){
                         param = list_cat(param, parcours_repertoire(prefixe->data, suf, word, double_star));
                     }
                     close(fd);
@@ -208,14 +204,12 @@ string_list* parcours_repertoire(char* dir_to_open, char* suf, char *word, int d
             char *tmp = ent->d_name;
             
             if((word != NULL && compare_word(tmp, word)) || word == NULL){
-                //printf("ajout : %s\n", prefixe->data);
                 list_append(param, prefixe->data);
             }
-            if(double_star && ent->d_type == DT_DIR && ent -> d_type != DT_LNK){
+            if(double_star && ent->d_type == DT_DIR){
                 param = list_cat(param, parcours_repertoire(prefixe->data, NULL, word, double_star));
             }
         }
-
         string_truncate(prefixe, strlen(ent->d_name));
         if(strcmp(dir_to_open, ".") != 0) string_truncate(prefixe, 1);
     }

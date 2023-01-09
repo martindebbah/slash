@@ -39,6 +39,16 @@ void list_delete(string_list *l) {
     free(l);
 }
 
+int find(string_list *l, char *s) {
+    while (l != NULL) {
+        if (strcmp(l->s, s) == 0) {
+            return 1;
+        }
+        l = l->suivant;
+    }
+    return 0;
+}
+
 string_list* list_cat(string_list* l1, string_list* l2){
     if(!l1 || !l1->s) {
         list_delete(l1);
@@ -48,11 +58,15 @@ string_list* list_cat(string_list* l1, string_list* l2){
         list_delete(l2);
         return l1;
     }
-    string_list* l = l1;
-    while(l->suivant != NULL){
+
+    string_list* l = l2;
+    while (l != NULL) {
+        if (find(l1, l->s) == 0) {
+            list_append(l1, l->s);
+        }
         l = l->suivant;
     }
-    l->suivant = l2;
-    
+
+    list_delete(l2);
     return l1;
 }

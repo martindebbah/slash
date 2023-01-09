@@ -154,8 +154,6 @@ string_list *process_joker(char *str){
         i++;
     }
 
-    //printf("suf : %s, %d\n", suf, i);
-
     string_list* path;
     if(suf[i] == '/'){ // ls */suf
         i++;

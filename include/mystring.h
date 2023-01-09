@@ -37,6 +37,7 @@ int string_prepend(struct string * dest, char * src);
 // il faut free après utilisation
 char *copy(struct string *path);
 
+// Retire les '/' quand ils sont en doublon
 struct string *clean(struct string *path);
   
 #endif // MYSTRING_H
